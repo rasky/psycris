@@ -29,7 +29,7 @@ template <typename T> T Bus::Read(uint32_t addr) {
 				case 0xC0: case 0xC1: case 0xC2: case 0xC3:
 				case 0xC4: case 0xC5: case 0xC6: case 0xC7:
 					// 0x1FC0-0x1FC7: BIOS
-					return *(T*)(bios + (addr & 0x3FFFF));
+					return *(T*)(bios + (addr & 0x7FFFF));
 				default:
 					printf("[BUS] unmapped read: %08x", addr);
 					return 0xFFFFFFFF;
