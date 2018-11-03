@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+BUILD_DIR=build
+
+if [[ -d ${BUILD_DIR} ]]; then
+    echo "The build subdir already exists. Exiting"
+    exit 0
+fi
+
+if ! which conan > /dev/null; then
+    echo "! The conan package manager is missing."
+    echo "  To install it read https://docs.conan.io/en/latest/installation.html"
+    echo "  TLDR; pip install conan"
+    exit 1
+fi
+
+mkdir ${BUILD_DIR}
+(
+    cd ${BUILD_DIR}
+    conan install --build=missing ..
+    cmake ..
+)
+
+echo "* bootstrap complete"

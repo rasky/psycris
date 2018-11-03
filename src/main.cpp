@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 		assert(!"cannot read BIOS");
 	}
 
-	cpu::memory_bus bus;
+	cpu::data_bus bus(bios, ram);
 	cpu::mips cpu(&bus);
 
 	cpu.run(1000);
