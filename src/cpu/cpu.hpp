@@ -36,7 +36,7 @@ namespace cpu {
 			case 0x1FC:
 			case 0x9FC:
 			case 0xBFC:
-				fmt::print("[BUS][BIOS] address={:x} offset={:x}\n", addr, addr & 0xf'ffff);
+				// fmt::print("[BUS][BIOS] address={:x} offset={:x}\n", addr, addr & 0xf'ffff);
 				// undefined behaviour?
 				return *(reinterpret_cast<T*>(&bios[addr & 0xf'ffff]));
 				break;
@@ -56,7 +56,7 @@ namespace cpu {
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			}
-			fmt::print("[BUS] write {:x} = {:x}\n", addr, val);
+			fmt::print("[BUS] write {:#x} = {:#x}\n", addr, val);
 		}
 
 	  private:

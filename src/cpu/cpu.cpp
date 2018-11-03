@@ -1,13 +1,7 @@
 #include "cpu.hpp"
+#include "disassembly.hpp"
 #include <cassert>
 #include <fmt/format.h>
-
-namespace {
-	std::string format(uint32_t ins) {
-		cpu::decoder d{ins};
-		return fmt::format("{:x} [{:0>32b}] opcode={:0>2x}", ins, ins, d.opcode());
-	}
-}
 
 namespace cpu {
 	mips::mips(data_bus* b) : bus{b} {
@@ -25,6 +19,7 @@ namespace cpu {
 	void mips::run(uint64_t until) {
 		while (clock < until) {
 			dec.ins = bus->read<uint32_t>(pc);
+			fmt::print("{:0>8x}: {}\n", pc, disassembly(dec.ins));
 
 			switch (dec.opcode()) {
 			case 0x00: // ALU Access
@@ -33,21 +28,24 @@ namespace cpu {
 					rd() = rt() << dec.imm5();
 					break;
 				default:
-					fmt::print("[CPU] unimplemented instruction: {}\n", format(dec.ins));
+					fmt::print("[CPU] unimplemented instruction\n");
 					assert(0);
 				}
 				break;
-			case 0x0f: // LUI -- Load upper immediate
-				rt() = dec.imm16() << 16;
+			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
+				rt() = rs() + dec.imm16();
 				break;
 			case 0x0d: // ORI -- Bitwise or immediate
 				rt() = rs() | dec.imm16();
+				break;
+			case 0x0f: // LUI -- Load upper immediate
+				rt() = dec.imm16() << 16;
 				break;
 			case 0x2b: // SW -- Store word
 				bus->write(rs() + dec.imm16(), rt());
 				break;
 			default:
-				fmt::print("[CPU] unimplemented instruction: {}\n", format(dec.ins));
+				fmt::print("[CPU] unimplemented instruction\n");
 				assert(0);
 			}
 

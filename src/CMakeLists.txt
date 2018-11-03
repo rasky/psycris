@@ -1,6 +1,7 @@
 add_executable(psycris
     main.cpp
-    cpu/cpu.cpp 
+    cpu/cpu.cpp
+    cpu/disassembly.cpp
 )
 
 target_compile_features(psycris PUBLIC cxx_std_17)
