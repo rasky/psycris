@@ -36,6 +36,10 @@ namespace {
 
 	struct reg {
 		uint8_t value;
+
+		bool operator==(uint8_t o) const {
+			return value == o;
+		}
 	};
 
 	std::ostream& operator<<(std::ostream& os, reg r) {
@@ -49,7 +53,7 @@ namespace {
 
 	std::string unknown(uint32_t ins) {
 		cpu::decoder d{ins};
-		return fmt::format("{:x} [{:0>32b}] opcode={:0>2x} funct={:0>2x}", ins, ins, d.opcode(), d.funct());
+		return fmt::format("{:0>8x} [{:0>32b}] opcode={:0>#2x} funct={:0>#2x}", ins, ins, d.opcode(), d.funct());
 	}
 
 	struct decoder : cpu::decoder {
@@ -72,7 +76,7 @@ namespace {
 }
 
 namespace cpu {
-	std::string disassembly(uint32_t ins) {
+	std::string disassembly(uint32_t ins, uint32_t pc) {
 		::decoder dec{ins};
 
 		switch (dec.opcode()) {
@@ -83,8 +87,15 @@ namespace cpu {
 					return "noop";
 				}
 				return fmt::format("sll {}, {}, {:#x}", dec.rd(), dec.rt(), dec.imm5());
+			case 0x25:
+				if (dec.rs() == 0 && dec.rt() == 0) {
+					return fmt::format("move {}, zero", dec.rd());
+				}
+				return fmt::format("or {}, {}, {}", dec.rd(), dec.rs(), dec.rt());
 			}
 			break;
+		case 0x02:
+			return fmt::format("j {:#x}", (pc & 0xf000'0000) | (dec.imm26() << 2));
 		case 0x09:
 			return fmt::format("addiu {}, {}, {:#x}", dec.rt(), dec.rs(), dec.imm16());
 		case 0x0d:
