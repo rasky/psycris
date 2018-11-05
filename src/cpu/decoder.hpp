@@ -29,11 +29,11 @@ namespace cpu {
 
 		uint8_t rd() const { return (ins >> 11) & 0x1F; }
 
-        uint8_t imm5() const {
+        uint8_t shamt() const {
             return (ins & 0x7ff) >> 6;
         }
 
-		int32_t imm16() const {
+		int32_t imm() const {
 			// Note: ALL arithmetic immediate values are sign-extended. After
 			// that, they are handled as signed or unsigned 32 bit numbers,
 			// depending upon the instruction. The only difference between
@@ -42,8 +42,49 @@ namespace cpu {
 			return static_cast<int32_t>((ins & 0xffff) << 16) >> 16;
 		}
 
-		uint32_t imm26() const {
+		uint32_t target() const {
             return ins & 0x3ff'ffff;
+        }
+
+        /**
+         * \brief checks if it is a coprocessor instruction
+         */
+        bool is_cop() const {
+            return ins & 0x4000'0000;
+        }
+
+        /**
+         * \brief checks if it is a call to coprocessor function
+         */
+        bool is_cop_fn() const {
+            return ins & 0x0200'0000;
+        }
+
+        /**
+         * \brief the coprocessor number
+         */
+        uint8_t cop_n() const {
+            return opcode() & 0x3;
+        }
+
+        /**
+         * \brief Returns the coprocessor sub operation.
+         *
+         * For the return value to be meaningful `is_cop()` must be true and
+         * `is_cop_fn()` must be false.
+         */
+        uint8_t cop_subop() const {
+            return rs();
+        }
+
+        /**
+         * \brief Returns the coprocessor function.
+         *
+         * For the return value to be meaningful both `is_cop()` and
+         * `is_cop_fn()` must be true.
+         */
+        uint32_t cop_fn() const {
+            return ins & 0x01ff'ffff;
         }
     };
 	// clang-format on

@@ -39,9 +39,9 @@ namespace cpu {
 			case 0x00: // ALU Access
 				switch (ins.funct()) {
 				case 0x00: // SLL -- Shift left logical
-					rd() = rt() << ins.imm5();
+					rd() = rt() << ins.shamt();
 					break;
-				case 0x25: // SLL -- Shift left logical
+				case 0x25: // OR -- Bitwise or
 					rd() = rs() | rt();
 					break;
 				default:
@@ -50,19 +50,19 @@ namespace cpu {
 				}
 				break;
 			case 0x02: // J -- Jump
-				npc = (pc & 0xf000'0000) | (ins.imm26() << 2);
+				npc = (pc & 0xf000'0000) | (ins.target() << 2);
 				break;
 			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
-				rt() = rs() + ins.imm16();
+				rt() = rs() + ins.imm();
 				break;
 			case 0x0d: // ORI -- Bitwise or immediate
-				rt() = rs() | ins.imm16();
+				rt() = rs() | ins.imm();
 				break;
 			case 0x0f: // LUI -- Load upper immediate
-				rt() = ins.imm16() << 16;
+				rt() = ins.imm() << 16;
 				break;
 			case 0x2b: // SW -- Store word
-				bus->write(rs() + ins.imm16(), rt());
+				bus->write(rs() + ins.imm(), rt());
 				break;
 			default:
 				fmt::print("[CPU] unimplemented instruction\n");

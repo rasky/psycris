@@ -52,11 +52,12 @@ namespace cpu {
 			case 0x00:
 			case 0x80:
 			case 0xa0:
-				fmt::print("[BUS][RAM] write to address={:x}\n", addr);
+				fmt::print("RAM:{:0>8x} << {:#x}\n", addr, val);
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
+			default:
+				fmt::print("[BUS] write {:#x} = {:#x}\n", addr, val);
 			}
-			fmt::print("[BUS] write {:#x} = {:#x}\n", addr, val);
 		}
 
 	  private:

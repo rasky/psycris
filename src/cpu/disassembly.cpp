@@ -2,6 +2,7 @@
 #include "decoder.hpp"
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -34,13 +35,21 @@ namespace {
 	};
 	// clang-format on
 
-	struct reg {
-		uint8_t value;
+	template <typename T, typename>
+	struct opaque {
+		T value;
 
-		bool operator==(uint8_t o) const {
+		opaque(T v) : value{v} {
+		}
+
+		bool operator==(T o) const {
 			return value == o;
 		}
 	};
+
+	using reg = opaque<uint8_t, class reg_>;
+	using i16 = opaque<uint16_t, class i16_>;
+	using i5 = opaque<uint8_t, class i5_>;
 
 	std::ostream& operator<<(std::ostream& os, reg r) {
 		if (r.value >= aliases.size()) {
@@ -48,6 +57,16 @@ namespace {
 		} else {
 			fmt::print(os, "{}({})", aliases[r.value], r.value);
 		}
+		return os;
+	}
+
+	std::ostream& operator<<(std::ostream& os, i16 r) {
+		fmt::print(os, "{:#x}", r.value);
+		return os;
+	}
+
+	std::ostream& operator<<(std::ostream& os, i5 r) {
+		fmt::print(os, "{:#x}", r.value);
 		return os;
 	}
 
@@ -69,42 +88,106 @@ namespace {
 			return reg{cpu::decoder::rd()};
 		}
 
-		uint16_t imm16() const {
-			return ins & 0xffff;
+		i5 shamt() const {
+			return i5{cpu::decoder::shamt()};
+		}
+
+		i16 imm() const {
+			// for the disassembler I ignore the sign extension because this is
+			// the way the user write the asm
+			return i16(ins & 0xffff);
 		}
 	};
+}
+
+namespace {
+	// clang-format off
+	std::unordered_map<uint8_t, std::string> iu_ins{
+        {0x0f, "lui {rt}, {imm16}"},
+        {0x09, "addiu {rt}, {rs}, {imm16}"},
+		{0x0d, "ori {rt}, {rs}, {imm16}"},
+		{0x2b, "sw {rt}, {imm16}({rs})"},
+    };
+
+    std::unordered_map<uint8_t, std::string> iu_funct_ins{
+		{0x00, "sll {rd}, {rt}, {imm5}"},
+		{0x25, "or {rd}, {rs}, {rt}"},
+    };
+	// clang-format on
+
+	std::string integer_unit(::decoder dec, uint32_t pc) {
+		std::string fmt;
+		{
+			auto r = iu_ins.find(dec.opcode());
+			if (r != iu_ins.end()) {
+				fmt = r->second;
+			}
+		}
+
+		if (fmt == "" && dec.opcode() == 0) {
+			// the opcode 0 is shared, we need to check the funct value
+			if (dec.ins == 0) {
+				fmt = "noop";
+			} else if (dec.funct() == 0x25 && dec.rs() == 0 && dec.rt() == 0) {
+				fmt = "move {rd}, zero";
+			} else {
+				auto r = iu_funct_ins.find(dec.funct());
+				if (r != iu_funct_ins.end()) {
+					fmt = r->second;
+				}
+			}
+		}
+
+		if (fmt == "") {
+			switch (dec.opcode()) {
+			case 0x02:
+				return fmt::format("j {:#x}", (pc & 0xf000'0000) | (dec.target() << 2));
+				break;
+			}
+		}
+
+		using namespace fmt::literals;
+		return fmt::format(fmt,
+		                   "rt"_a = dec.rt(),
+		                   "rd"_a = dec.rd(),
+		                   "rs"_a = dec.rs(),
+		                   "imm5"_a = dec.shamt(),
+		                   "imm16"_a = dec.imm());
+	}
+
+	std::string coprocessor(::decoder dec) {
+		std::string fmt = "";
+		if (!dec.is_cop()) {
+			return fmt;
+		}
+
+		if (!dec.is_cop_fn()) {
+			switch (dec.cop_subop()) {
+			case 0x00:
+				fmt = "mfc{cn} {rt}, {rd}";
+				break;
+			case 0x04:
+				fmt = "mtc{cn} {rt}, {rd}";
+				break;
+			}
+		}
+
+		using namespace fmt::literals;
+		return fmt::format(fmt, "rt"_a = dec.rt(), "rd"_a = dec.rd(), "rs"_a = dec.rs(), "cn"_a = dec.cop_n());
+	}
 }
 
 namespace cpu {
 	std::string disassembly(uint32_t ins, uint32_t pc) {
 		::decoder dec{ins};
 
-		switch (dec.opcode()) {
-		case 0x00:
-			switch (dec.funct()) {
-			case 0x00:
-				if (ins == 0) {
-					return "noop";
-				}
-				return fmt::format("sll {}, {}, {:#x}", dec.rd(), dec.rt(), dec.imm5());
-			case 0x25:
-				if (dec.rs() == 0 && dec.rt() == 0) {
-					return fmt::format("move {}, zero", dec.rd());
-				}
-				return fmt::format("or {}, {}, {}", dec.rd(), dec.rs(), dec.rt());
-			}
-			break;
-		case 0x02:
-			return fmt::format("j {:#x}", (pc & 0xf000'0000) | (dec.imm26() << 2));
-		case 0x09:
-			return fmt::format("addiu {}, {}, {:#x}", dec.rt(), dec.rs(), dec.imm16());
-		case 0x0d:
-			return fmt::format("ori {}, {}, {:#x}", dec.rt(), dec.rs(), dec.imm16());
-		case 0x0f:
-			return fmt::format("lui {}, {:#x}", dec.rt(), dec.imm16());
-		case 0x2b:
-			return fmt::format("sw {}, {}({})", dec.rt(), dec.imm16(), dec.rs());
+		std::string s = integer_unit(dec, pc);
+		if (s == "") {
+			s = coprocessor(dec);
 		}
-		return unknown(ins);
+		if (s == "") {
+			s = unknown(ins);
+		}
+		return s;
 	}
 }
