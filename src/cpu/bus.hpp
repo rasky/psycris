@@ -2,7 +2,9 @@
 #include "decoder.hpp"
 #include <cstdint>
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <gsl/span>
+#include <rang.hpp>
 
 namespace cpu {
 	/**
@@ -41,7 +43,7 @@ namespace cpu {
 				return *(reinterpret_cast<T*>(&bios[addr & 0xf'ffff]));
 				break;
 			default:
-				fmt::print("[BUS] unmapped read: {:x}", addr);
+				fmt::print("{}[BUS] unmapped read at {:0>8x}{}\n", rang::fg::red, addr, rang::fg::reset);
 				return {};
 			}
 		}
@@ -52,7 +54,7 @@ namespace cpu {
 			case 0x00:
 			case 0x80:
 			case 0xa0:
-				fmt::print("RAM:{:0>8x} << {:#x}\n", addr, val);
+				fmt::print("{}RAM:{:0>8x} << {:#x}{}\n", rang::fgB::cyan, addr, val, rang::fg::reset);
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			default:

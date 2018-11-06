@@ -1,5 +1,6 @@
 #pragma once
 #include "bus.hpp"
+#include "cop0.hpp"
 #include "decoder.hpp"
 #include <array>
 #include <cstdint>
@@ -17,15 +18,13 @@ namespace cpu {
 
 		void run(uint64_t until);
 
-	  public:
-		constexpr uint32_t& operator[](uint8_t ix) {
-			return regs[ix];
-		}
-
 	  private:
 		uint32_t& rs();
 		uint32_t& rt();
 		uint32_t& rd();
+
+		template <typename Coprocessor>
+		void run_cop(Coprocessor&);
 
 	  private:
 		std::array<uint32_t, 32> regs;
@@ -47,5 +46,7 @@ namespace cpu {
 		// mips.
 		decoder next_ins;
 		uint32_t npc;
+
+		cpu::cop0 cop0;
 	};
 }

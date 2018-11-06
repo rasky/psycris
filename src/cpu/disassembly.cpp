@@ -42,12 +42,13 @@ namespace {
 		opaque(T v) : value{v} {
 		}
 
-		bool operator==(T o) const {
-			return value == o;
+		operator T() const {
+			return value;
 		}
 	};
 
 	using reg = opaque<uint8_t, class reg_>;
+	using i32 = opaque<uint32_t, class i32_>;
 	using i16 = opaque<uint16_t, class i16_>;
 	using i5 = opaque<uint8_t, class i5_>;
 
@@ -60,6 +61,11 @@ namespace {
 		return os;
 	}
 
+	std::ostream& operator<<(std::ostream& os, i32 r) {
+		fmt::print(os, "{:#x}", r.value);
+		return os;
+	}
+
 	std::ostream& operator<<(std::ostream& os, i16 r) {
 		fmt::print(os, "{:#x}", r.value);
 		return os;
@@ -67,6 +73,16 @@ namespace {
 
 	std::ostream& operator<<(std::ostream& os, i5 r) {
 		fmt::print(os, "{:#x}", r.value);
+		return os;
+	}
+
+	struct cop_reg {
+		uint8_t cop;
+		uint8_t value;
+	};
+
+	std::ostream& operator<<(std::ostream& os, cop_reg r) {
+		fmt::print(os, "cop{}r{}", r.cop, r.value);
 		return os;
 	}
 
@@ -103,9 +119,13 @@ namespace {
 namespace {
 	// clang-format off
 	std::unordered_map<uint8_t, std::string> iu_ins{
-        {0x0f, "lui {rt}, {imm16}"},
+        {0x02, "j {target}"},
+        {0x05, "bne {rs}, {rt}, {j_rel}"},
+        {0x08, "addi {rs}, {rt}, {imm16}"},
         {0x09, "addiu {rt}, {rs}, {imm16}"},
 		{0x0d, "ori {rt}, {rs}, {imm16}"},
+        {0x0f, "lui {rt}, {imm16}"},
+        {0x23, "lw {rt}, {imm16}({rs})"},
 		{0x2b, "sw {rt}, {imm16}({rs})"},
     };
 
@@ -138,21 +158,15 @@ namespace {
 			}
 		}
 
-		if (fmt == "") {
-			switch (dec.opcode()) {
-			case 0x02:
-				return fmt::format("j {:#x}", (pc & 0xf000'0000) | (dec.target() << 2));
-				break;
-			}
-		}
-
 		using namespace fmt::literals;
 		return fmt::format(fmt,
 		                   "rt"_a = dec.rt(),
 		                   "rd"_a = dec.rd(),
 		                   "rs"_a = dec.rs(),
 		                   "imm5"_a = dec.shamt(),
-		                   "imm16"_a = dec.imm());
+		                   "imm16"_a = dec.imm(),
+		                   "target"_a = i32((pc & 0xf000'0000) | (dec.target() << 2)),
+		                   "j_rel"_a = i32(pc + 4 + (static_cast<int16_t>(dec.imm()) << 2)));
 	}
 
 	std::string coprocessor(::decoder dec) {
@@ -173,7 +187,8 @@ namespace {
 		}
 
 		using namespace fmt::literals;
-		return fmt::format(fmt, "rt"_a = dec.rt(), "rd"_a = dec.rd(), "rs"_a = dec.rs(), "cn"_a = dec.cop_n());
+		return fmt::format(
+		    fmt, "rt"_a = cop_reg{dec.cop_n(), dec.rt()}, "rd"_a = dec.rd(), "rs"_a = dec.rs(), "cn"_a = dec.cop_n());
 	}
 }
 

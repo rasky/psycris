@@ -4,14 +4,16 @@
 #include <fmt/format.h>
 
 namespace cpu {
+	namespace {}
+}
+
+namespace cpu {
 	mips::mips(data_bus* b) : bus{b} {
 		reset();
 	}
 
 	void mips::reset() {
-		for (auto& r : regs) {
-			r = 0;
-		}
+		regs.fill(0);
 		clock = 0;
 
 		ins = mips::noop;
@@ -52,6 +54,14 @@ namespace cpu {
 			case 0x02: // J -- Jump
 				npc = (pc & 0xf000'0000) | (ins.target() << 2);
 				break;
+			case 0x05: // BNE -- Branch On Not Equal
+				if (rs() != rt()) {
+					npc = npc + (ins.imm() << 2);
+				}
+				break;
+			case 0x08: // ADDI -- Add Immediate Word
+				rt() = rs() + ins.imm();
+				break;
 			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
 				rt() = rs() + ins.imm();
 				break;
@@ -61,15 +71,44 @@ namespace cpu {
 			case 0x0f: // LUI -- Load upper immediate
 				rt() = ins.imm() << 16;
 				break;
+			case 0x23:
+				rt() = bus->read<uint32_t>(rs() + ins.imm());
+				break;
 			case 0x2b: // SW -- Store word
 				bus->write(rs() + ins.imm(), rt());
 				break;
+			case 0x10: // COP0
+				run_cop(cop0);
+				break;
+			case 0x12: // COP2
+				fmt::print("[CPU] unimplemented instruction for coprocessor 2\n");
+				break;
+			case 0x11: // COP1
+			case 0x13: // COP3
+				fmt::print("[CPU] instruction for unavailable coprocessor {}\n", ins.cop_n());
+				break;
 			default:
-				fmt::print("[CPU] unimplemented instruction\n");
+				fmt::print("\033[31m[CPU] unimplemented instruction\033[0m\n");
 				assert(0);
 			}
 
 			ins = next_ins;
+		}
+	}
+
+	template <typename Coprocessor>
+	void mips::run_cop(Coprocessor& cop) {
+		if (ins.is_cop_fn()) {
+			fmt::print("[CPU][COP] unimplemented 'cop command' {}\n", ins.cop_fn());
+			return;
+		}
+		switch (ins.cop_subop()) {
+		case 0x04: // MTC
+			cop.regs[ins.rt()] = rd();
+			break;
+		default:
+			fmt::print("[CPU][COP] unimplemented instruction\n");
+			assert(0);
 		}
 	}
 
@@ -78,10 +117,10 @@ namespace cpu {
 	}
 
 	uint32_t& mips::rt() {
-		return regs[ins.rs()];
+		return regs[ins.rt()];
 	}
 
 	uint32_t& mips::rd() {
-		return regs[ins.rs()];
+		return regs[ins.rd()];
 	}
 }
