@@ -54,9 +54,9 @@ namespace {
 
 	std::ostream& operator<<(std::ostream& os, reg r) {
 		if (r.value >= aliases.size()) {
-			fmt::print(os, "R??");
+			fmt::print(os, "R{}!", r.value);
 		} else {
-			fmt::print(os, "{}({})", aliases[r.value], r.value);
+			fmt::print(os, "r{}", r.value);
 		}
 		return os;
 	}
@@ -108,10 +108,8 @@ namespace {
 			return i5{cpu::decoder::shamt()};
 		}
 
-		i16 imm() const {
-			// for the disassembler I ignore the sign extension because this is
-			// the way the user write the asm
-			return i16(ins & 0xffff);
+		i16 uimm() const {
+			return cpu::decoder::uimm();
 		}
 	};
 }
@@ -120,18 +118,25 @@ namespace {
 	// clang-format off
 	std::unordered_map<uint8_t, std::string> iu_ins{
         {0x02, "j {target}"},
+        {0x03, "jal {target}"},
         {0x05, "bne {rs}, {rt}, {j_rel}"},
         {0x08, "addi {rs}, {rt}, {imm16}"},
         {0x09, "addiu {rt}, {rs}, {imm16}"},
+        {0x0c, "andi {rt}, {rs}, {imm16}"},
 		{0x0d, "ori {rt}, {rs}, {imm16}"},
         {0x0f, "lui {rt}, {imm16}"},
-        {0x23, "lw {rt}, {imm16}({rs})"},
-		{0x2b, "sw {rt}, {imm16}({rs})"},
+        {0x23, "lw {rt}, {rs} + {imm16}"},
+        {0x28, "sb {rt}, {rs} + {imm16}"},
+        {0x29, "sh {rt}, {rs} + {imm16}"},
+		{0x2b, "sw {rt}, {rs} + {imm16}"},
     };
 
     std::unordered_map<uint8_t, std::string> iu_funct_ins{
 		{0x00, "sll {rd}, {rt}, {imm5}"},
+        {0x08, "jr {rs}"},
+        {0x21, "addu {rd}, {rs}, {rt}"},
 		{0x25, "or {rd}, {rs}, {rt}"},
+        {0x2b, "sltu {rd}, {rs}, {rt}"},
     };
 	// clang-format on
 
@@ -164,9 +169,9 @@ namespace {
 		                   "rd"_a = dec.rd(),
 		                   "rs"_a = dec.rs(),
 		                   "imm5"_a = dec.shamt(),
-		                   "imm16"_a = dec.imm(),
+		                   "imm16"_a = dec.uimm(),
 		                   "target"_a = i32((pc & 0xf000'0000) | (dec.target() << 2)),
-		                   "j_rel"_a = i32(pc + 4 + (static_cast<int16_t>(dec.imm()) << 2)));
+		                   "j_rel"_a = i32(pc + 4 + (dec.imm() << 2)));
 	}
 
 	std::string coprocessor(::decoder dec) {

@@ -1,10 +1,19 @@
 #include "cpu.hpp"
 #include "disassembly.hpp"
 #include <cassert>
+#include <cstdlib>
 #include <fmt/format.h>
 
-namespace cpu {
-	namespace {}
+namespace {
+	void unimplemented(uint32_t pc, uint64_t clock, cpu::decoder ins) {
+		fmt::print(
+		    "\033[31m[CPU] unimplemented instruction pc={:0>8x} clock={} opcode={:0>#2x} funct={:0>#2x}\033[0m\n",
+		    pc,
+		    clock,
+		    ins.opcode(),
+		    ins.funct());
+		std::exit(99);
+	}
 }
 
 namespace cpu {
@@ -30,10 +39,12 @@ namespace cpu {
 
 			// adjust the program counters; for debug we want to print the
 			// current instruction along with the location where we fetched it,
-			// but for the cpu the PC of the current instruction is such
-			// location + 4
+			// but for the cpu the PC of the current instruction is pointing to
+			// the next instruction (the delay slot).
 			fmt::print("{:0>8x}: {}\n", pc, disassembly(ins, pc));
+			// pc now points to the delay slot
 			pc = npc;
+			// npc to the instruction after the delay slot
 			npc += 4;
 
 			// execute
@@ -43,14 +54,22 @@ namespace cpu {
 				case 0x00: // SLL -- Shift left logical
 					rd() = rt() << ins.shamt();
 					break;
+				case 0x21: // ADDU -- Add Unsigned Word
+					rd() = rs() + rt();
+					break;
+				case 0x2b: // SLTU -- Set On Less Than Unsigned
+					rd() = rs() < rt() ? 1 : 0;
+					break;
 				case 0x25: // OR -- Bitwise or
 					rd() = rs() | rt();
 					break;
 				default:
-					fmt::print("[CPU] unimplemented instruction\n");
-					assert(0);
+					unimplemented(pc, clock, ins);
 				}
 				break;
+			case 0x03: // JAL -- Jump And Link
+				regs[31] = npc;
+				[[fallthrough]];
 			case 0x02: // J -- Jump
 				npc = (pc & 0xf000'0000) | (ins.target() << 2);
 				break;
@@ -59,20 +78,35 @@ namespace cpu {
 					npc = npc + (ins.imm() << 2);
 				}
 				break;
-			case 0x08: // ADDI -- Add Immediate Word
-				rt() = rs() + ins.imm();
+			case 0x08: { // ADDI -- Add Immediate Word
+				uint32_t r;
+				if (__builtin_add_overflow(rs(), ins.imm(), &r)) {
+					fmt::print("integer overflow, missing exception\n");
+					assert(0);
+				}
+				rt() = r;
 				break;
+			}
 			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
 				rt() = rs() + ins.imm();
 				break;
+			case 0x0c: // ANDI -- And Immediate
+				rt() = rs() & ins.uimm();
+				break;
 			case 0x0d: // ORI -- Bitwise or immediate
-				rt() = rs() | ins.imm();
+				rt() = rs() | ins.uimm();
 				break;
 			case 0x0f: // LUI -- Load upper immediate
-				rt() = ins.imm() << 16;
+				rt() = ins.uimm() << 16;
 				break;
-			case 0x23:
+			case 0x23: // LW -- Load word
 				rt() = bus->read<uint32_t>(rs() + ins.imm());
+				break;
+			case 0x28: // SB -- Store Byte
+				bus->write(rs() + ins.imm(), static_cast<uint8_t>(rt()));
+				break;
+			case 0x29: // SH -- Store Halfword
+				bus->write(rs() + ins.imm(), static_cast<uint16_t>(rt()));
 				break;
 			case 0x2b: // SW -- Store word
 				bus->write(rs() + ins.imm(), rt());
@@ -88,8 +122,7 @@ namespace cpu {
 				fmt::print("[CPU] instruction for unavailable coprocessor {}\n", ins.cop_n());
 				break;
 			default:
-				fmt::print("\033[31m[CPU] unimplemented instruction\033[0m\n");
-				assert(0);
+				unimplemented(pc, clock, ins);
 			}
 
 			ins = next_ins;

@@ -32,20 +32,29 @@ namespace cpu {
 		}
 
 	  public:
+		static const uint32_t open_bus = 0xffff'ffff;
+
+	  public:
 		template <typename T>
 		T read(uint32_t addr) {
+			uint8_t hw = addr >> 24;
+			if (hw < 0x1f || (hw >= 0x80 && hw < 0x9f) || (hw >= 0xa0 && hw < 0xbf)) {
+				// RAM
+				return *(reinterpret_cast<T*>(&ram[addr & 0xff'ffff]));
+			}
+
 			switch (addr >> 20) {
 			case 0x1FC:
 			case 0x9FC:
 			case 0xBFC:
-				// fmt::print("[BUS][BIOS] address={:x} offset={:x}\n", addr, addr & 0xf'ffff);
+				// BIOS
 				// undefined behaviour?
 				return *(reinterpret_cast<T*>(&bios[addr & 0xf'ffff]));
 				break;
-			default:
-				fmt::print("{}[BUS] unmapped read at {:0>8x}{}\n", rang::fg::red, addr, rang::fg::reset);
-				return {};
 			}
+
+			fmt::print("{}[BUS] unmapped read at {:0>8x}{}\n", rang::fg::red, addr, rang::fg::reset);
+			return reinterpret_cast<T>(open_bus);
 		}
 
 		template <typename T>

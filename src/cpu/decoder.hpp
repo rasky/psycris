@@ -42,6 +42,10 @@ namespace cpu {
 			return static_cast<int32_t>((ins & 0xffff) << 16) >> 16;
 		}
 
+        uint32_t uimm() const {
+			return ins & 0xffff;
+		}
+
 		uint32_t target() const {
             return ins & 0x3ff'ffff;
         }
