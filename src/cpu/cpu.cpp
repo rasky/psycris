@@ -6,7 +6,7 @@
 
 namespace {
 	void unimplemented(uint32_t pc, uint64_t clock, cpu::decoder ins) {
-		psycris::log->critical("[CPU] unimplemented instruction pc={:0>8x} clock={} opcode={:0>#2x} funct={:0>#2x}\n",
+		psycris::log->critical("[CPU] unimplemented instruction pc={:0>8x} clock={} opcode={:0>#2x} funct={:0>#2x}",
 		                       pc,
 		                       clock,
 		                       ins.opcode(),
@@ -42,7 +42,7 @@ namespace cpu {
 			// current instruction along with the location where we fetched it,
 			// but for the cpu the PC of the current instruction is pointing to
 			// the next instruction (the delay slot).
-			log->trace("{:0>8x}: {}\n", pc, disassembly(ins, pc));
+			log->trace("{:0>8x}: {}", pc, disassembly(ins, pc));
 			// pc now points to the delay slot
 			pc = npc;
 			// npc to the instruction after the delay slot
@@ -82,7 +82,7 @@ namespace cpu {
 			case 0x08: { // ADDI -- Add Immediate Word
 				uint32_t r;
 				if (__builtin_add_overflow(rs(), ins.imm(), &r)) {
-					log->warn("integer overflow, missing exception\n");
+					log->warn("integer overflow, missing exception");
 					assert(0);
 				}
 				rt() = r;
@@ -116,11 +116,11 @@ namespace cpu {
 				run_cop(cop0);
 				break;
 			case 0x12: // COP2
-				log->warn("[CPU] unimplemented instruction for coprocessor 2\n");
+				log->warn("[CPU] unimplemented instruction for coprocessor 2");
 				break;
 			case 0x11: // COP1
 			case 0x13: // COP3
-				log->warn("[CPU] instruction for unavailable coprocessor {}\n", ins.cop_n());
+				log->warn("[CPU] instruction for unavailable coprocessor {}", ins.cop_n());
 				break;
 			default:
 				unimplemented(pc, clock, ins);
@@ -135,7 +135,7 @@ namespace cpu {
 		using psycris::log;
 
 		if (ins.is_cop_fn()) {
-			log->warn("[CPU][COP] unimplemented 'cop command' {}\n", ins.cop_fn());
+			log->warn("[CPU][COP] unimplemented 'cop command' {}", ins.cop_fn());
 			return;
 		}
 		switch (ins.cop_subop()) {
@@ -143,7 +143,7 @@ namespace cpu {
 			cop.regs[ins.rt()] = rd();
 			break;
 		default:
-			log->warn("[CPU][COP] unimplemented instruction\n");
+			log->warn("[CPU][COP] unimplemented instruction");
 			assert(0);
 		}
 	}

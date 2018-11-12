@@ -55,7 +55,7 @@ namespace cpu {
 				break;
 			}
 
-			log->warn("[BUS] unmapped read at {:0>8x}\n", addr);
+			log->warn("[BUS] unmapped read at {:0>8x}", addr);
 			return reinterpret_cast<T>(open_bus);
 		}
 
@@ -67,7 +67,7 @@ namespace cpu {
 			case 0x00:
 			case 0x80:
 			case 0xa0:
-				log->trace("RAM:{:0>8x} << {:#x}\n", addr, val);
+				log->trace("RAM:{:0>8x} << {:#x}", addr, val);
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			default:

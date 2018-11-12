@@ -6,5 +6,5 @@ namespace psycris {
 
 	extern std::shared_ptr<spdlog::logger> log;
 
-	void init_logging();
+	void init_logging(bool verbose);
 }
