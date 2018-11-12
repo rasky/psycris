@@ -1,10 +1,10 @@
 #pragma once
+#include "../logging.hpp"
 #include "decoder.hpp"
 #include <cstdint>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <gsl/span>
-#include <rang.hpp>
 
 namespace cpu {
 	/**
@@ -37,6 +37,8 @@ namespace cpu {
 	  public:
 		template <typename T>
 		T read(uint32_t addr) {
+			using psycris::log;
+
 			uint8_t hw = addr >> 24;
 			if (hw < 0x1f || (hw >= 0x80 && hw < 0x9f) || (hw >= 0xa0 && hw < 0xbf)) {
 				// RAM
@@ -53,21 +55,23 @@ namespace cpu {
 				break;
 			}
 
-			fmt::print("{}[BUS] unmapped read at {:0>8x}{}\n", rang::fg::red, addr, rang::fg::reset);
+			log->warn("[BUS] unmapped read at {:0>8x}\n", addr);
 			return reinterpret_cast<T>(open_bus);
 		}
 
 		template <typename T>
 		void write(uint32_t addr, T val) {
+			using psycris::log;
+
 			switch (addr >> 24) {
 			case 0x00:
 			case 0x80:
 			case 0xa0:
-				fmt::print("{}RAM:{:0>8x} << {:#x}{}\n", rang::fgB::cyan, addr, val, rang::fg::reset);
+				log->trace("RAM:{:0>8x} << {:#x}\n", addr, val);
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			default:
-				fmt::print("[BUS] write {:#x} = {:#x}\n", addr, val);
+				log->warn("[BUS] unmapped write at {:0>8x}", addr);
 			}
 		}
 
