@@ -21,5 +21,5 @@ int main(int argc, char* argv[]) {
 	cpu::data_bus bus(bios, ram);
 	cpu::mips cpu(&bus);
 
-	cpu.run(15000);
+	cpu.run(25000);
 }

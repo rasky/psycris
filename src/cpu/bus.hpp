@@ -55,8 +55,8 @@ namespace cpu {
 				break;
 			}
 
-			log->warn("[BUS] unmapped read at {:0>8x}", addr);
-			return reinterpret_cast<T>(open_bus);
+			log->warn("[BUS] unmapped read at {:0>8x} ({} bytes)", addr, sizeof(T));
+			return static_cast<T>(open_bus);
 		}
 
 		template <typename T>
@@ -71,7 +71,8 @@ namespace cpu {
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			default:
-				log->warn("[BUS] unmapped write at {:0>8x}", addr);
+				std::string msg = fmt::format("[BUS] unmapped write at {{:0>8x}}, 0x{{:0>{}x}}", sizeof(val) * 2);
+				log->warn(msg.c_str(), addr, val);
 			}
 		}
 

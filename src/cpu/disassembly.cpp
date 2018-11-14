@@ -56,7 +56,7 @@ namespace {
 		if (r.value >= aliases.size()) {
 			fmt::print(os, "R{}!", r.value);
 		} else {
-			fmt::print(os, "r{}", r.value);
+			fmt::print(os, "{}", aliases[r.value]);
 		}
 		return os;
 	}
@@ -119,12 +119,14 @@ namespace {
 	std::unordered_map<uint8_t, std::string> iu_ins{
         {0x02, "j {target}"},
         {0x03, "jal {target}"},
+        {0x04, "beq {rs}, {rt}, {j_rel}"},
         {0x05, "bne {rs}, {rt}, {j_rel}"},
         {0x08, "addi {rs}, {rt}, {imm16}"},
         {0x09, "addiu {rt}, {rs}, {imm16}"},
         {0x0c, "andi {rt}, {rs}, {imm16}"},
 		{0x0d, "ori {rt}, {rs}, {imm16}"},
         {0x0f, "lui {rt}, {imm16}"},
+        {0x20, "lb {rt}, {rs} + {imm16}"},
         {0x23, "lw {rt}, {rs} + {imm16}"},
         {0x28, "sb {rt}, {rs} + {imm16}"},
         {0x29, "sh {rt}, {rs} + {imm16}"},
@@ -134,6 +136,7 @@ namespace {
     std::unordered_map<uint8_t, std::string> iu_funct_ins{
 		{0x00, "sll {rd}, {rt}, {imm5}"},
         {0x08, "jr {rs}"},
+        {0x09, "jalr {rd}, {rs}"},
         {0x21, "addu {rd}, {rs}, {rt}"},
 		{0x25, "or {rd}, {rs}, {rt}"},
         {0x2b, "sltu {rd}, {rs}, {rt}"},

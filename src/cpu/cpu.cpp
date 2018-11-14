@@ -55,6 +55,13 @@ namespace cpu {
 				case 0x00: // SLL -- Shift left logical
 					rd() = rt() << ins.shamt();
 					break;
+				case 0x08: // JR -- Jump Register
+					npc = rs();
+					break;
+				case 0x09: // JALR -- Jump And Link Register
+					rd() = npc;
+					npc = rs();
+					break;
 				case 0x21: // ADDU -- Add Unsigned Word
 					rd() = rs() + rt();
 					break;
@@ -74,9 +81,14 @@ namespace cpu {
 			case 0x02: // J -- Jump
 				npc = (pc & 0xf000'0000) | (ins.target() << 2);
 				break;
+			case 0x04: // BEQ -- Branch On Equal
+				if (rs() == rt()) {
+					npc = pc + (ins.imm() << 2);
+				}
+				break;
 			case 0x05: // BNE -- Branch On Not Equal
 				if (rs() != rt()) {
-					npc = npc + (ins.imm() << 2);
+					npc = pc + (ins.imm() << 2);
 				}
 				break;
 			case 0x08: { // ADDI -- Add Immediate Word
@@ -99,6 +111,9 @@ namespace cpu {
 				break;
 			case 0x0f: // LUI -- Load upper immediate
 				rt() = ins.uimm() << 16;
+				break;
+			case 0x20: // LB -- Load byte
+				rt() = bus->read<int8_t>(rs() + ins.imm());
 				break;
 			case 0x23: // LW -- Load word
 				rt() = bus->read<uint32_t>(rs() + ins.imm());
