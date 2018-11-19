@@ -55,6 +55,9 @@ namespace cpu {
 				case 0x00: // SLL -- Shift left logical
 					rd() = rt() << ins.shamt();
 					break;
+				case 0x02: // SRL -- Shift Word Right Logical
+					rd() = rt() >> ins.shamt();
+					break;
 				case 0x08: // JR -- Jump Register
 					npc = rs();
 					break;
@@ -64,6 +67,9 @@ namespace cpu {
 					break;
 				case 0x21: // ADDU -- Add Unsigned Word
 					rd() = rs() + rt();
+					break;
+				case 0x23: // SUBU -- Subtract Unsigned Word
+					rd() = rs() - rt();
 					break;
 				case 0x2b: // SLTU -- Set On Less Than Unsigned
 					rd() = rs() < rt() ? 1 : 0;
@@ -117,6 +123,9 @@ namespace cpu {
 				break;
 			case 0x23: // LW -- Load word
 				rt() = bus->read<uint32_t>(rs() + ins.imm());
+				break;
+			case 0x25: // LHU -- Load Halfword Unsigned
+				rt() = bus->read<uint16_t>(rs() + ins.imm());
 				break;
 			case 0x28: // SB -- Store Byte
 				bus->write(rs() + ins.imm(), static_cast<uint8_t>(rt()));
