@@ -2,6 +2,7 @@ add_executable(psycris
     main.cpp
     config.cpp
     logging.cpp
+    loader.cpp
     cpu/cpu.cpp
     cpu/disassembly.cpp
 )

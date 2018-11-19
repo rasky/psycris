@@ -76,7 +76,32 @@ namespace cpu {
 			}
 		}
 
-	  private:
+	  public:
+		gsl::span<uint8_t> ram_slice(uint32_t addr, uint32_t size) {
+			uint8_t hw = addr >> 24;
+
+			bool in_ram = hw < 0x1f || (hw >= 0x80 && hw < 0x9f) || (hw >= 0xa0 && hw < 0xbf);
+			assert(in_ram);
+
+			uint32_t offset = addr & 0x00ff'ffff;
+			assert(offset + size <= ram.size());
+
+			return {&ram[offset], size};
+		}
+
+		gsl::span<uint8_t> bios_slice(uint32_t addr, uint32_t size) {
+			uint16_t hw = addr >> 20;
+
+			bool in_bios = hw == 0x1fc || hw == 0x9fc || hw == 0xbfc;
+			assert(in_bios);
+
+			uint32_t offset = addr & 0x000f'ffff;
+			assert(offset + size <= bios.size());
+
+			return {&bios[offset], size};
+		}
+
+	  public:
 		gsl::span<uint8_t> bios;
 		gsl::span<uint8_t> ram;
 	};
