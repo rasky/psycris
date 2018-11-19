@@ -2,6 +2,14 @@
 #include <cstdint>
 
 namespace cpu {
+	/**
+	 * \brief sign extend the first `bits` of v
+	 */
+	inline int32_t sx(uint32_t v, int bits) {
+		bits = 32 - bits;
+		return static_cast<int32_t>(v << bits) >> bits;
+	}
+
 	// clang-format off
 	struct decoder {
       public:

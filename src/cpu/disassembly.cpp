@@ -174,7 +174,7 @@ namespace {
 		                   "imm5"_a = dec.shamt(),
 		                   "imm16"_a = dec.uimm(),
 		                   "target"_a = i32((pc & 0xf000'0000) | (dec.target() << 2)),
-		                   "j_rel"_a = i32(pc + 4 + (dec.imm() << 2)));
+		                   "j_rel"_a = i32(pc + 4 + cpu::sx(dec.uimm() << 2, 16)));
 	}
 
 	std::string coprocessor(::decoder dec) {
