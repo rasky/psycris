@@ -26,5 +26,5 @@ int main(int argc, char* argv[]) {
 		psycris::load_exe(f, bus);
 	}
 
-	cpu.run(100);
+	cpu.run(cfg.ticks);
 }
