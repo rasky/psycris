@@ -34,6 +34,8 @@ namespace cpu {
 	void mips::run(uint64_t until) {
 		using psycris::log;
 
+		reg_tracer rtracer;
+
 		while (clock++ < until) {
 			// prefecth the next instruction
 			next_ins = bus->read<uint32_t>(npc);
@@ -149,6 +151,8 @@ namespace cpu {
 			default:
 				unimplemented(pc, clock, ins);
 			}
+
+			rtracer.trace(regs);
 
 			ins = next_ins;
 		}

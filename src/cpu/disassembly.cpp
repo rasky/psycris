@@ -1,4 +1,5 @@
 #include "disassembly.hpp"
+#include "../logging.hpp"
 #include "decoder.hpp"
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -139,6 +140,7 @@ namespace {
         {0x02, "srl {rd}, {rt}, {imm5}"},
         {0x08, "jr {rs}"},
         {0x09, "jalr {rd}, {rs}"},
+        {0x0c, "syscall"},
         {0x21, "addu {rd}, {rs}, {rt}"},
         {0x23, "subu {rd}, {rs}, {rt}"},
 		{0x25, "or {rd}, {rs}, {rt}"},
@@ -198,8 +200,11 @@ namespace {
 		}
 
 		using namespace fmt::literals;
-		return fmt::format(
-		    fmt, "rt"_a = cop_reg{dec.cop_n(), dec.rt()}, "rd"_a = dec.rd(), "rs"_a = dec.rs(), "cn"_a = dec.cop_n());
+		return fmt::format(fmt,                                     //
+		                   "rt"_a = cop_reg{dec.cop_n(), dec.rt()}, //
+		                   "rd"_a = dec.rd(),                       //
+		                   "rs"_a = dec.rs(),                       //
+		                   "cn"_a = dec.cop_n());                   //
 	}
 }
 
@@ -215,5 +220,25 @@ namespace cpu {
 			s = unknown(ins);
 		}
 		return s;
+	}
+}
+
+namespace cpu {
+	void reg_tracer::trace(std::array<uint32_t, 32> const& regs) {
+		using psycris::log;
+
+		std::string line;
+		auto d = std::back_inserter(line);
+
+		for (size_t i = 0; i < regs.size(); i++) {
+			if (regs[i] != traced[i]) {
+				fmt::format_to(d, "{}=0x{:0>8x} ", aliases[i], regs[i]);
+				traced[i] = regs[i];
+			}
+		}
+
+		if (line.size() > 0) {
+			log->trace("[ {} ]", line);
+		}
 	}
 }

@@ -113,7 +113,10 @@ namespace psycris {
 		           hdr.sp_offset);
 		log->trace("exe header ZEROFILL=0x{:0>8x}#{}", hdr.memfill_start, hdr.memfill_size);
 
-		log->info("loading {} bytes at address 0x{:>8x}", hdr.exe_size, hdr.load_address);
+		log->info("loading {} bytes into 0x{:>8x}:0x{:>8x}", //
+		          hdr.exe_size,                              //
+		          hdr.load_address,                          //
+		          hdr.load_address + hdr.exe_size);          //
 		log->info("exe from \"{}\"", hdr.marker());
 		if (hdr.exe_size % 2048 != 0) {
 			log->warn("exe size must be a multiple of 2048, it is {} instead", hdr.exe_size);
