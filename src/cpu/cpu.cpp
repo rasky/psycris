@@ -13,6 +13,13 @@ namespace {
 		                       ins.funct());
 		std::exit(99);
 	}
+
+	// clang-format off
+	template <size_t AccessSize> struct bus_align;
+	template <> struct bus_align<1> { static constexpr uint8_t mask = 0x0; };
+	template <> struct bus_align<2> { static constexpr uint8_t mask = 0x1; };
+	template <> struct bus_align<4> { static constexpr uint8_t mask = 0x3; };
+	// clang-format on
 }
 
 namespace cpu {
@@ -121,22 +128,22 @@ namespace cpu {
 				rt() = ins.uimm() << 16;
 				break;
 			case 0x20: // LB -- Load byte
-				rt() = sx(bus->read<uint8_t>(rs() + ins.imm()), 8);
+				rt() = sx(read<uint8_t>(rs() + ins.imm()), 8);
 				break;
 			case 0x23: // LW -- Load word
-				rt() = bus->read<uint32_t>(rs() + ins.imm());
+				rt() = read<uint32_t>(rs() + ins.imm());
 				break;
 			case 0x25: // LHU -- Load Halfword Unsigned
-				rt() = bus->read<uint16_t>(rs() + ins.imm());
+				rt() = read<uint16_t>(rs() + ins.imm());
 				break;
 			case 0x28: // SB -- Store Byte
-				bus->write(rs() + ins.imm(), static_cast<uint8_t>(rt()));
+				write(rs() + ins.imm(), static_cast<uint8_t>(rt()));
 				break;
 			case 0x29: // SH -- Store Halfword
-				bus->write(rs() + ins.imm(), static_cast<uint16_t>(rt()));
+				write(rs() + ins.imm(), static_cast<uint16_t>(rt()));
 				break;
 			case 0x2b: // SW -- Store word
-				bus->write(rs() + ins.imm(), rt());
+				write(rs() + ins.imm(), rt());
 				break;
 			case 0x10: // COP0
 				run_cop(cop0);
@@ -174,6 +181,26 @@ namespace cpu {
 			log->warn("[CPU][COP] unimplemented instruction");
 			assert(0);
 		}
+	}
+
+	template <typename T>
+	T mips::read(uint32_t addr) const {
+		constexpr uint8_t mask = bus_align<sizeof(T)>::mask;
+		if ((addr & mask) != 0) {
+			psycris::log->error("unaligned read at 0x{:0>8x} (TODO raise hw exception)", addr);
+			addr &= ~mask;
+		}
+		return bus->read<T>(addr);
+	}
+
+	template <typename T>
+	void mips::write(uint32_t addr, T val) const {
+		constexpr uint8_t mask = bus_align<sizeof(T)>::mask;
+		if ((addr & mask) != 0) {
+			psycris::log->error("unaligned write at 0x{:0>8x} (TODO raise hw exception)", addr);
+			addr &= ~mask;
+		}
+		bus->write(addr, val);
 	}
 
 	uint32_t& mips::rs() {

@@ -23,6 +23,26 @@ namespace cpu {
 		uint32_t& rt();
 		uint32_t& rd();
 
+	  private:
+		/**
+		 * \brief Reads from the bus
+		 *
+		 * An Address error hw exception is raised if the address is not
+		 * properly aligned.
+		 */
+		template <typename T>
+		T read(uint32_t) const;
+
+		/**
+		 * \brief Writes to the bus
+		 *
+		 * An Address error hw exception is raised if the address is not
+		 * properly aligned.
+		 */
+		template <typename T>
+		void write(uint32_t, T) const;
+
+	  private:
 		template <typename Coprocessor>
 		void run_cop(Coprocessor&);
 
