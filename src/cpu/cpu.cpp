@@ -121,7 +121,7 @@ namespace cpu {
 				rt() = ins.uimm() << 16;
 				break;
 			case 0x20: // LB -- Load byte
-				rt() = bus->read<int8_t>(rs() + ins.imm());
+				rt() = sx(bus->read<uint8_t>(rs() + ins.imm()), 8);
 				break;
 			case 0x23: // LW -- Load word
 				rt() = bus->read<uint32_t>(rs() + ins.imm());

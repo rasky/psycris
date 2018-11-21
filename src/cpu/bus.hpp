@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <fmt/format.h>
 #include <gsl/span>
+#include <type_traits>
 
 namespace cpu {
 	/**
@@ -43,6 +44,9 @@ namespace cpu {
 	  public:
 		template <typename T>
 		T read(uint32_t addr) {
+			static_assert(std::is_unsigned_v<T> && sizeof(T) <= 4,
+			              "The data_bus read type must be a 8/16/32 unsigned int");
+
 			using psycris::log;
 
 			uint8_t hw = addr >> 24;
@@ -67,6 +71,9 @@ namespace cpu {
 
 		template <typename T>
 		void write(uint32_t addr, T val) {
+			static_assert(std::is_unsigned_v<T> && sizeof(T) <= 4,
+			              "The data_bus write type must be a 8/16/32 unsigned int");
+
 			using psycris::log;
 
 			switch (addr >> 24) {
