@@ -129,7 +129,7 @@ namespace {
         {0x0f, "lui {rt}, {imm16}"},
         {0x20, "lb {rt}, {rs} + {imm16}"},
         {0x23, "lw {rt}, {rs} + {imm16}"},
-        {0x25, "lhw {rt}, {rs} + {imm16}"},
+        {0x25, "lhu {rt}, {rs} + {imm16}"},
         {0x28, "sb {rt}, {rs} + {imm16}"},
         {0x29, "sh {rt}, {rs} + {imm16}"},
 		{0x2b, "sw {rt}, {rs} + {imm16}"},
