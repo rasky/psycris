@@ -9,15 +9,12 @@ namespace psycris {
 		CLI::App app("psycris");
 
 		app.add_flag("--verbose", cfg.verbose, "be verbose");
-		app.add_flag("--bios",
-		             [&](size_t) { cfg.input_mode = config::bios; },
-		             "use if the input file is a bios, the default is PSX-EXE");
 
 		app.add_option("--ticks,-t", cfg.ticks, "number of CPU ticks to simulate");
 
-		app.add_option("input_file", cfg.input_file, "execute this file") //
-		    ->required()                                                  //
-		    ->check(CLI::ExistingFile);                                   //
+		app.add_option("input_file", cfg.bios_file, "the bios to load") //
+		    ->required()                                                //
+		    ->check(CLI::ExistingFile);                                 //
 
 		try {
 			app.parse(argc, argv);
