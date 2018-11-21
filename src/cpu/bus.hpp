@@ -3,10 +3,16 @@
 #include "decoder.hpp"
 #include <cstdint>
 #include <fmt/format.h>
-#include <fmt/ostream.h>
 #include <gsl/span>
 
 namespace cpu {
+	/**
+	 * \brief given an IO addres returns a string describing its use
+	 *
+	 * This function is intended to be used during the debug only.
+	 */
+	std::string guess_io_port(uint32_t addr);
+
 	/**
 	 * \brief CPU data bus
 	 *
@@ -71,7 +77,8 @@ namespace cpu {
 				*(reinterpret_cast<T*>(&ram[addr & 0xff'ffff])) = val;
 				break;
 			default:
-				std::string msg = fmt::format("[BUS] unmapped write at {{:0>8x}}, 0x{{:0>{}x}}", sizeof(val) * 2);
+				std::string msg = fmt::format(
+				    "[BUS] unmapped write at {{:0>8x}}, 0x{{:0>{}x}} ({})", sizeof(val) * 2, guess_io_port(addr));
 				log->warn(msg.c_str(), addr, val);
 			}
 		}
