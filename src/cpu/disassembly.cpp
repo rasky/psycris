@@ -201,9 +201,8 @@ namespace {
 
 		using namespace fmt::literals;
 		return fmt::format(fmt,                                     //
-		                   "rt"_a = cop_reg{dec.cop_n(), dec.rt()}, //
-		                   "rd"_a = dec.rd(),                       //
-		                   "rs"_a = dec.rs(),                       //
+		                   "rd"_a = cop_reg{dec.cop_n(), dec.rd()}, //
+		                   "rt"_a = dec.rt(),                       //
 		                   "cn"_a = dec.cop_n());                   //
 	}
 }

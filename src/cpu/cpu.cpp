@@ -51,7 +51,7 @@ namespace cpu {
 			// current instruction along with the location where we fetched it,
 			// but for the cpu the PC of the current instruction is pointing to
 			// the next instruction (the delay slot).
-			log->trace("{:0>8x}: {}", pc, disassembly(ins, pc));
+			log->trace("{:0>8x}@{}: {}", pc, clock, disassembly(ins, pc));
 			// pc now points to the delay slot
 			pc = npc;
 			// npc to the instruction after the delay slot
@@ -174,8 +174,11 @@ namespace cpu {
 			return;
 		}
 		switch (ins.cop_subop()) {
+		case 0x00: // MFC
+			rt() = cop.regs[ins.rd()];
+			break;
 		case 0x04: // MTC
-			cop.regs[ins.rt()] = rd();
+			cop.regs[ins.rd()] = rt();
 			break;
 		default:
 			log->warn("[CPU][COP] unimplemented instruction");
