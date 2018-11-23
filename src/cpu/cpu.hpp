@@ -43,6 +43,10 @@ namespace cpu {
 		void write(uint32_t, T) const;
 
 	  private:
+		template <typename B>
+		void add_with_overflow(uint32_t& c, uint32_t a, B b);
+
+	  private:
 		template <typename Coprocessor>
 		void run_cop(Coprocessor&);
 

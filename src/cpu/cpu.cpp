@@ -74,11 +74,17 @@ namespace cpu {
 					rd() = npc;
 					npc = rs();
 					break;
+				case 0x20: // ADD -- Add Word
+					add_with_overflow(rd(), rs(), rt());
+					break;
 				case 0x21: // ADDU -- Add Unsigned Word
 					rd() = rs() + rt();
 					break;
 				case 0x23: // SUBU -- Subtract Unsigned Word
 					rd() = rs() - rt();
+					break;
+				case 0x24: // AND -- And
+					rd() = rs() & rt();
 					break;
 				case 0x2b: // SLTU -- Set On Less Than Unsigned
 					rd() = rs() < rt() ? 1 : 0;
@@ -106,15 +112,9 @@ namespace cpu {
 					npc = pc + sx(ins.uimm() << 2, 16);
 				}
 				break;
-			case 0x08: { // ADDI -- Add Immediate Word
-				uint32_t r;
-				if (__builtin_add_overflow(rs(), ins.imm(), &r)) {
-					log->warn("integer overflow, missing exception");
-					assert(0);
-				}
-				rt() = r;
+			case 0x08: // ADDI -- Add Immediate Word
+				add_with_overflow(rt(), rs(), ins.imm());
 				break;
-			}
 			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
 				rt() = rs() + ins.imm();
 				break;
@@ -170,7 +170,8 @@ namespace cpu {
 		using psycris::log;
 
 		if (ins.is_cop_fn()) {
-			log->warn("[CPU][COP] unimplemented 'cop command' {}", ins.cop_fn());
+			log->critical("[CPU][COP] unimplemented 'cop command' {}", ins.cop_fn());
+			assert(0);
 			return;
 		}
 		switch (ins.cop_subop()) {
@@ -178,6 +179,7 @@ namespace cpu {
 			rt() = cop.regs[ins.rd()];
 			break;
 		case 0x04: // MTC
+			log->info("[CPU][COP] PC={:0>8x}@{} reg{} = 0x{:0>8x}", pc, clock, ins.rd(), rt());
 			cop.regs[ins.rd()] = rt();
 			break;
 		default:
@@ -216,5 +218,16 @@ namespace cpu {
 
 	uint32_t& mips::rd() {
 		return regs[ins.rd()];
+	}
+
+	template <typename B>
+	void mips::add_with_overflow(uint32_t& c, uint32_t a, B b) {
+		uint32_t r;
+		if (__builtin_add_overflow(a, b, &r)) {
+			psycris::log->critical("integer overflow, TODO raise hw exception");
+			std::exit(99);
+			// return std::nullopt;
+		}
+		c = r;
 	}
 }

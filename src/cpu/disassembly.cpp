@@ -141,8 +141,10 @@ namespace {
         {0x08, "jr {rs}"},
         {0x09, "jalr {rd}, {rs}"},
         {0x0c, "syscall"},
+        {0x20, "add {rd}, {rs}, {rt}"},
         {0x21, "addu {rd}, {rs}, {rt}"},
         {0x23, "subu {rd}, {rs}, {rt}"},
+        {0x24, "and {rd}, {rs}, {rt}"},
 		{0x25, "or {rd}, {rs}, {rt}"},
         {0x2b, "sltu {rd}, {rs}, {rt}"},
     };
