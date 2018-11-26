@@ -199,6 +199,12 @@ namespace {
 				fmt = "mtc{cn} {rt}, {rd}";
 				break;
 			}
+		} else {
+			switch (dec.cop_fn()) {
+			case 0x10:
+				fmt = "rfe";
+				break;
+			}
 		}
 
 		using namespace fmt::literals;

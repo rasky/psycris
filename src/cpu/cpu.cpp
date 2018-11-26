@@ -170,8 +170,16 @@ namespace cpu {
 		using psycris::log;
 
 		if (ins.is_cop_fn()) {
-			log->critical("[CPU][COP] unimplemented 'cop command' {}", ins.cop_fn());
-			assert(0);
+			switch (ins.cop_fn()) {
+			case 0x10: { // RFE -- Restore from Exception
+				uint32_t& sr = cop.sr();
+				sr |= (sr & 0x3c) >> 2;
+				break;
+			}
+			default:
+				log->critical("[CPU][COP] unimplemented 'cop command' {}", ins.cop_fn());
+				assert(0);
+			}
 			return;
 		}
 		switch (ins.cop_subop()) {
@@ -179,7 +187,7 @@ namespace cpu {
 			rt() = cop.regs[ins.rd()];
 			break;
 		case 0x04: // MTC
-			log->info("[CPU][COP] PC={:0>8x}@{} reg{} = 0x{:0>8x}", pc, clock, ins.rd(), rt());
+			log->info("[CPU][COP] PC={:0>8x}@{} reg{} = 0x{:0>8x}", pc - 4, clock, ins.rd(), rt());
 			cop.regs[ins.rd()] = rt();
 			break;
 		default:
