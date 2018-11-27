@@ -86,12 +86,47 @@ namespace cpu {
 				case 0x24: // AND -- And
 					rd() = rs() & rt();
 					break;
+				case 0x2a: // SLT -- Set On Less Than
+					rd() = static_cast<int32_t>(rs()) < static_cast<int32_t>(rt()) ? 1 : 0;
+					break;
 				case 0x2b: // SLTU -- Set On Less Than Unsigned
 					rd() = rs() < rt() ? 1 : 0;
 					break;
 				case 0x25: // OR -- Bitwise or
 					rd() = rs() | rt();
 					break;
+				default:
+					unimplemented(pc, clock, ins);
+				}
+				break;
+			case 0x01:
+				switch (ins.rt()) {
+				case 0x01: // BGEZ -- Branch On Greater Than Or Equal To Zero
+					if (static_cast<int32_t>(rs()) >= 0) {
+						npc = pc + sx(ins.uimm() << 2, 16);
+					}
+					break;
+				case 0x11: { // BGEZAL -- Branch On Greater Than Or Equal To Zero And Link
+					bool c = static_cast<int32_t>(rs()) >= 0;
+					regs[31] = npc;
+					if (c) {
+						npc = pc + sx(ins.uimm() << 2, 16);
+					}
+					break;
+				}
+				case 0x00: // BLTZ -- Branch On Less Than Zero
+					if (static_cast<int32_t>(rs()) < 0) {
+						npc = pc + sx(ins.uimm() << 2, 16);
+					}
+					break;
+				case 0x10: { // BLTZAL -- Branch On Less Than Zero And Link
+					bool c = static_cast<int32_t>(rs()) < 0;
+					regs[31] = npc;
+					if (c) {
+						npc = pc + sx(ins.uimm() << 2, 16);
+					}
+					break;
+				}
 				default:
 					unimplemented(pc, clock, ins);
 				}
@@ -112,11 +147,27 @@ namespace cpu {
 					npc = pc + sx(ins.uimm() << 2, 16);
 				}
 				break;
+			case 0x06: // BLEZ -- Branch On Less Than Or Equal To Zero
+				if (static_cast<int32_t>(rs()) <= 0) {
+					npc = pc + sx(ins.uimm() << 2, 16);
+				}
+				break;
+			case 0x07: // BGTZ -- Branch On Greater Than Zero
+				if (static_cast<int32_t>(rs()) > 0) {
+					npc = pc + sx(ins.uimm() << 2, 16);
+				}
+				break;
 			case 0x08: // ADDI -- Add Immediate Word
 				add_with_overflow(rt(), rs(), ins.imm());
 				break;
 			case 0x09: // ADDIU -- Add immediate unsigned (no overflow)
 				rt() = rs() + ins.imm();
+				break;
+			case 0x0a: // SLTI -- Set On Less Than Immediate
+				rt() = static_cast<int32_t>(rs()) < ins.imm() ? 1 : 0;
+				break;
+			case 0x0b: // SLTIU -- Set On Less Than Immediate Unsigned
+				rt() = rs() < static_cast<uint32_t>(ins.imm()) ? 1 : 0;
 				break;
 			case 0x0c: // ANDI -- And Immediate
 				rt() = rs() & ins.uimm();
@@ -132,6 +183,9 @@ namespace cpu {
 				break;
 			case 0x23: // LW -- Load word
 				rt() = read<uint32_t>(rs() + ins.imm());
+				break;
+			case 0x24: // LBU -- Load Byte Unsigned
+				rt() = read<uint8_t>(rs() + ins.imm());
 				break;
 			case 0x25: // LHU -- Load Halfword Unsigned
 				rt() = read<uint16_t>(rs() + ins.imm());

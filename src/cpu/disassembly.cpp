@@ -122,13 +122,18 @@ namespace {
         {0x03, "jal {target}"},
         {0x04, "beq {rs}, {rt}, {j_rel}"},
         {0x05, "bne {rs}, {rt}, {j_rel}"},
+        {0x06, "blez {rs}, {j_rel}"},
+        {0x07, "bgtz {rs}, {j_rel}"},
         {0x08, "addi {rs}, {rt}, {imm16}"},
         {0x09, "addiu {rt}, {rs}, {imm16}"},
+        {0x0a, "slti {rt}, {rs}, {imm16}"},
+        {0x0b, "sltiu {rt}, {rs}, {imm16}"},
         {0x0c, "andi {rt}, {rs}, {imm16}"},
 		{0x0d, "ori {rt}, {rs}, {imm16}"},
         {0x0f, "lui {rt}, {imm16}"},
         {0x20, "lb {rt}, {rs} + {imm16}"},
         {0x23, "lw {rt}, {rs} + {imm16}"},
+        {0x24, "lbu {rt}, {rs} + {imm16}"},
         {0x25, "lhu {rt}, {rs} + {imm16}"},
         {0x28, "sb {rt}, {rs} + {imm16}"},
         {0x29, "sh {rt}, {rs} + {imm16}"},
@@ -145,7 +150,8 @@ namespace {
         {0x21, "addu {rd}, {rs}, {rt}"},
         {0x23, "subu {rd}, {rs}, {rt}"},
         {0x24, "and {rd}, {rs}, {rt}"},
-		{0x25, "or {rd}, {rs}, {rt}"},
+        {0x25, "or {rd}, {rs}, {rt}"},
+        {0x2a, "slt {rd}, {rs}, {rt}"},
         {0x2b, "sltu {rd}, {rs}, {rt}"},
     };
 	// clang-format on
@@ -170,6 +176,24 @@ namespace {
 				if (r != iu_funct_ins.end()) {
 					fmt = r->second;
 				}
+			}
+		}
+
+		if (fmt == "" && dec.opcode() == 1) {
+			// the opcode 1 is shared, we need to check the rt value
+			switch (dec.rt()) {
+			case 0x01:
+				fmt = "bgez {rs}, {j_rel}";
+				break;
+			case 0x11:
+				fmt = "bgezal {rs}, {j_rel}";
+				break;
+			case 0x00:
+				fmt = "bltz {rs}, {j_rel}";
+				break;
+			case 0x10:
+				fmt = "bltzal {rs}, {j_rel}";
+				break;
 			}
 		}
 
