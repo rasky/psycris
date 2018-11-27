@@ -209,9 +209,19 @@ namespace cpu {
 	template <typename T>
 	void mips::write(uint32_t addr, T val) const {
 		constexpr uint8_t mask = bus_align<sizeof(T)>::mask;
+		using psycris::log;
+
 		if ((addr & mask) != 0) {
-			psycris::log->error("unaligned write at 0x{:0>8x} (TODO raise hw exception)", addr);
+			log->error("unaligned write at 0x{:0>8x} (TODO raise hw exception)", addr);
 			addr &= ~mask;
+		}
+		if (cop0.sr() & cop0::sr_bits::IsC) {
+			// the cache is "isolated", but I don't want to implement the exact
+			// behavior, for now just ignore the request.
+			if (val != 0) {
+				log->warn("writing a non zero value on an isolated cache. addr={:0>8x} val={:0>8x}", addr, val);
+			}
+			return;
 		}
 		bus->write(addr, val);
 	}
