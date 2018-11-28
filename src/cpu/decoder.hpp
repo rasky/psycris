@@ -41,6 +41,8 @@ namespace cpu {
             return (ins & 0x7ff) >> 6;
         }
 
+        uint64_t sa() const { return shamt(); }
+
 		int32_t imm() const {
 			// Note: ALL arithmetic immediate values are sign-extended. After
 			// that, they are handled as signed or unsigned 32 bit numbers,

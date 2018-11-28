@@ -62,10 +62,24 @@ namespace cpu {
 			case 0x00: // ALU Access
 				switch (ins.funct()) {
 				case 0x00: // SLL -- Shift left logical
+				           // XXX
 					rd() = rt() << ins.shamt();
 					break;
 				case 0x02: // SRL -- Shift Word Right Logical
-					rd() = rt() >> ins.shamt();
+				           // XXX
+					rd() = (rt() & 0x0000ffff) >> ins.shamt();
+					break;
+				case 0x03: // SRA -- Shift Word Right Arithmetic
+				           // XXX
+					rd() = sx((rt() & 0x0000ffff) >> ins.sa(), 16);
+					break;
+				case 0x04: // SLLV -- Shift Word Left Logical Variable
+				           // XXX
+					rd() = (rt() & 0x0000ffff) << (rs() & 0x1f);
+					break;
+				case 0x07: // SRAV -- Shift Word Right Arithmetic Variable
+				           // XXX
+					rd() = sx(rt() >> (rs() & 0x1f), 16);
 					break;
 				case 0x08: // JR -- Jump Register
 					npc = rs();
