@@ -23,6 +23,9 @@ namespace cpu {
 		uint32_t& rt();
 		uint32_t& rd();
 
+		uint32_t& hi();
+		uint32_t& lo();
+
 	  private:
 		/**
 		 * \brief Reads from the bus
@@ -52,6 +55,14 @@ namespace cpu {
 
 	  private:
 		std::array<uint32_t, 32> regs;
+
+		// The two registers associated with the integer multipler.
+		//
+		// These registers, referred to as “HI” and “LO”, contain the 64-bit
+		// product result of a multiply operation, or the quotient and remainder
+		// of a divide.
+		std::array<uint32_t, 2> mult_regs;
+
 		uint64_t clock;
 
 		data_bus* bus;

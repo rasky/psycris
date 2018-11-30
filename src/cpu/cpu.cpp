@@ -61,7 +61,7 @@ namespace cpu {
 			switch (ins.opcode()) {
 			case 0x00: // ALU Access
 				switch (ins.funct()) {
-				case 0x00: // SLL -- Shift left logical
+				case 0x00: // SLL -- Shift Word Left logical
 				           // XXX
 					rd() = rt() << ins.shamt();
 					break;
@@ -87,6 +87,23 @@ namespace cpu {
 				case 0x09: // JALR -- Jump And Link Register
 					rd() = npc;
 					npc = rs();
+					break;
+				case 0x10: // MFHI -- Move From Hi
+					rd() = hi();
+					break;
+				case 0x12: // MFLO -- Move From Lo
+					rd() = lo();
+					break;
+				case 0x1a: { // DIV -- Divide Word
+					auto r = std::div(static_cast<int32_t>(rs()), static_cast<int32_t>(rt()));
+					lo() = r.quot;
+					hi() = r.rem;
+					break;
+				}
+				case 0x1b: // DIVU -- Divide Unsigned Word
+				           // XXX
+					lo() = rs() / rt();
+					hi() = rs() % rt();
 					break;
 				case 0x20: // ADD -- Add Word
 					add_with_overflow(rd(), rs(), rt());
@@ -304,6 +321,14 @@ namespace cpu {
 
 	uint32_t& mips::rd() {
 		return regs[ins.rd()];
+	}
+
+	uint32_t& mips::hi() {
+		return mult_regs[1];
+	}
+
+	uint32_t& mips::lo() {
+		return mult_regs[0];
 	}
 
 	template <typename B>
