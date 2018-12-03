@@ -164,7 +164,7 @@ namespace cpu {
 				break;
 			case 0x04: // BEQ -- Branch On Equal
 				if (rs() == rt()) {
-					npc = pc + (ins.imm() << 2);
+					npc = pc + sx(ins.uimm() << 2, 16);
 				}
 				break;
 			case 0x05: // BNE -- Branch On Not Equal
