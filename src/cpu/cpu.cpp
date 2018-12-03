@@ -68,13 +68,13 @@ namespace cpu {
 					rd() = rt() >> ins.shamt();
 					break;
 				case 0x03: // SRA -- Shift Word Right Arithmetic
-					rd() = sx(rt() >> ins.sa(), 16);
+					rd() = static_cast<int32_t>(rt() >> ins.shamt());
 					break;
 				case 0x04: // SLLV -- Shift Word Left Logical Variable
 					rd() = rt() << (rs() & 0x1f);
 					break;
 				case 0x07: // SRAV -- Shift Word Right Arithmetic Variable
-					rd() = sx(rt() >> (rs() & 0x1f), 16);
+					rd() = static_cast<int32_t>(rt() >> (rs() & 0x1f));
 					break;
 				case 0x08: // JR -- Jump Register
 					npc = rs();

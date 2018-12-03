@@ -143,7 +143,7 @@ namespace {
     std::unordered_map<uint8_t, std::string> iu_funct_ins{
 		{0x00, "sll {rd}, {rt}, {imm5}"},
 		{0x02, "srl {rd}, {rt}, {imm5}"},
-		{0x03, "sra {rd}, {rt}, {sa}"},
+		{0x03, "sra {rd}, {rt}, {shamt}"},
 		{0x04, "sllv {rd}, {rt}, {rs}"},
 		{0x07, "srav {rd}, {rt}, {rs}"},
 		{0x08, "jr {rs}"},
@@ -209,7 +209,7 @@ namespace {
 		                   "rt"_a = dec.rt(),
 		                   "rd"_a = dec.rd(),
 		                   "rs"_a = dec.rs(),
-		                   "sa"_a = dec.sa(),
+		                   "shamt"_a = dec.shamt(),
 		                   "imm5"_a = dec.shamt(),
 		                   "imm16"_a = dec.uimm(),
 		                   "target"_a = i32((pc & 0xf000'0000) | (dec.target() << 2)),
