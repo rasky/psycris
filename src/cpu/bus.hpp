@@ -7,6 +7,174 @@
 #include <type_traits>
 
 namespace cpu {
+	class data_port {
+	  public:
+		template <typename T>
+		T read(uint32_t offset) {
+			assert(sizeof(T) <= 4);
+
+			if constexpr (sizeof(T) == 1) {
+				return read8(offset);
+			} else if constexpr (sizeof(T) == 2) {
+				return read16(offset);
+			} else {
+				return read32(offset);
+			}
+		}
+
+		template <typename T>
+		void write(uint32_t offset, T val) {
+			assert(sizeof(T) <= 4);
+
+			if constexpr (sizeof(T) == 1) {
+				write8(offset, val);
+			} else if constexpr (sizeof(T) == 2) {
+				write16(offset, val);
+			} else {
+				write32(offset, val);
+			}
+		}
+
+	  private:
+		virtual uint8_t read8(uint32_t offset) const {
+			psycris::log->warn("unsupported read of 1 byte at offset {:0>8x}. Is this a write-only port?", offset);
+			return 0;
+		}
+
+		virtual uint16_t read16(uint32_t offset) const {
+			psycris::log->warn("unsupported read of 2 bytes at offset {:0>8x}. Is this a write-only port?", offset);
+			return 0;
+		}
+
+		virtual uint32_t read32(uint32_t offset) const {
+			psycris::log->warn("unsupported read of 4 bytes at offset {:0>8x}. Is this a write-only port?", offset);
+			return 0;
+		}
+
+	  private:
+		virtual void write8(uint32_t offset, uint8_t val) {
+			psycris::log->warn(
+			    "unsupported write of 1 byte at offset {:0>8x} ({:0>8x}). Is this a read-only port?", offset, val);
+		}
+
+		virtual void write16(uint32_t offset, uint16_t val) {
+			psycris::log->warn(
+			    "unsupported write of 2 bytes at offset {:0>8x} ({:0>8x}). Is this a read-only port?", offset, val);
+		}
+
+		virtual void write32(uint32_t offset, uint32_t val) {
+			psycris::log->warn(
+			    "unsupported write of 4 bytes at offset {:0>8x} ({:0>8x}). Is this a read-only port?", offset, val);
+		}
+	};
+}
+
+namespace hw {
+
+	template <size_t Size>
+	struct memory_range {
+		static constexpr size_t size = Size;
+
+		memory_range(gsl::span<uint8_t, size> buffer) : memory{buffer} {
+		}
+
+		gsl::span<uint8_t, size> memory;
+	};
+
+	class ram : public cpu::data_port, memory_range<2 * 1024 * 1024> {
+	  private:
+		uint8_t read8(uint32_t offset) const override {
+			return memory[offset];
+		}
+
+		uint16_t read16(uint32_t offset) const override {
+			return *(reinterpret_cast<uint16_t*>(&memory[offset]));
+		}
+
+		uint32_t read32(uint32_t offset) const override {
+			return *(reinterpret_cast<uint32_t*>(&memory[offset]));
+		}
+
+	  private:
+		void write8(uint32_t offset, uint8_t val) override {
+			memory[offset] = val;
+		}
+
+		void write16(uint32_t offset, uint16_t val) override {
+			*(reinterpret_cast<uint16_t*>(&memory[offset])) = val;
+		}
+
+		void write32(uint32_t offset, uint32_t val) override {
+			*(reinterpret_cast<uint32_t*>(&memory[offset])) = val;
+		}
+	};
+}
+
+namespace cpu {
+
+	struct address_range {
+		uint32_t start;
+		uint32_t end;
+
+		bool operator&(uint32_t v) const {
+			return v >= start && v <= end;
+		}
+	};
+
+	class data_busX {
+	  public:
+		static const uint32_t open_bus = 0xffff'ffff;
+
+	  public:
+		void connect(address_range, data_port&);
+
+	  private:
+		struct port_map {
+			address_range range;
+			data_port* port;
+
+			uint32_t offset(uint32_t addr) const {
+				assert(addr <= range.end);
+				return addr - range.start;
+			}
+		};
+
+	  public:
+		template <typename T>
+		T read(uint32_t addr) {
+			static_assert(std::is_unsigned_v<T> && sizeof(T) <= 4,
+			              "The data_bus read type must be a 8/16/32 unsigned int");
+
+			auto pos = std::find_if(std::begin(ports), std::end(ports), [=](port_map& m) { return m.range & addr; });
+			if (pos == std::end(ports)) {
+				psycris::log->warn("[BUS] unmapped read of {} bytes at {:0>8x}", sizeof(T), addr);
+				return static_cast<T>(open_bus);
+			}
+
+			port_map& m = *pos;
+			return m.port->read<T>(m.offset(addr));
+		}
+
+		template <typename T>
+		void write(uint32_t addr, T val) {
+			static_assert(std::is_unsigned_v<T> && sizeof(T) <= 4,
+			              "The data_bus write type must be a 8/16/32 unsigned int");
+
+			auto pos = std::find_if(std::begin(ports), std::end(ports), [=](port_map& m) { return m.range & addr; });
+			if (pos == std::end(ports)) {
+				psycris::log->warn("[BUS] unmapped write of {} bytes at {:0>8x} ({:0>8x})", sizeof(T), addr, val);
+				return;
+			}
+
+			port_map& m = *pos;
+			m.port->write(m.offset(addr), val);
+		}
+
+	  private:
+		std::vector<port_map> ports;
+	};
+}
+namespace cpu {
 	/**
 	 * \brief given an IO addres returns a string describing its use
 	 *
