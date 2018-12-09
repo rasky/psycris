@@ -23,7 +23,7 @@ namespace {
 }
 
 namespace cpu {
-	mips::mips(data_bus* b) : bus{b} {
+	mips::mips(data_bus& b) : bus{&b} {
 		reset();
 	}
 

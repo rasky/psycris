@@ -12,7 +12,7 @@ namespace cpu {
 		static const uint32_t noop = 0;
 
 	  public:
-		mips(data_bus*);
+		mips(data_bus&);
 
 		void reset();
 

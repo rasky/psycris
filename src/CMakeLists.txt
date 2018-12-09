@@ -3,6 +3,7 @@ add_executable(psycris
     config.cpp
     logging.cpp
     loader.cpp
+    psx.cpp
     cpu/cpu.cpp
     cpu/bus.cpp
     cpu/disassembly.cpp
@@ -15,4 +16,5 @@ target_link_libraries(psycris
     CONAN_PKG::fmt
     CONAN_PKG::gsl_microsoft
     CONAN_PKG::spdlog
+    CONAN_PKG::boost
 )
