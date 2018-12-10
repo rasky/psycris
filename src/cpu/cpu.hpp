@@ -53,7 +53,7 @@ namespace cpu {
 		template <typename Coprocessor>
 		void run_cop(Coprocessor&);
 
-	  private:
+	  public:
 		std::array<uint32_t, 32> regs;
 
 		// The two registers associated with the integer multipler.
@@ -63,11 +63,13 @@ namespace cpu {
 		// of a divide.
 		std::array<uint32_t, 2> mult_regs;
 
+		cpu::cop0 cop0;
+
+	  private:
 		uint64_t clock;
 
 		data_bus* bus;
 
-	  private:
 		// the current instruction; the one executed during this clock cycle
 		decoder ins;
 		// the pc of the current instruction
@@ -81,7 +83,5 @@ namespace cpu {
 		// mips.
 		decoder next_ins;
 		uint32_t npc;
-
-		cpu::cop0 cop0;
 	};
 }

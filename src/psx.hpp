@@ -1,20 +1,25 @@
 #pragma once
 #include "cpu/bus.hpp"
 #include "cpu/cpu.hpp"
-#include "hw/ram.hpp"
-#include <vector>
 
-#include <boost/hana.hpp>
+#include "hw/interrupt_control.hpp"
+#include "hw/ram.hpp"
+
+#include "meta.hpp"
+#include <vector>
 
 namespace psycris {
 
 	class psx {
 	  public:
 		struct board {
-			using layout = std::tuple<hw::ram, hw::rom>;
+			using layout = std::tuple<hw::ram, hw::rom, hw::interrupt_control>;
 
 			constexpr static size_t memory_size() {
-				return hw::ram::size + hw::rom::size;
+				return boost::hana::fold_left(to_type_t<layout>, 0, [](int state, auto p) {
+					using T = typename decltype(p)::type;
+					return state + T::size;
+				});
 			}
 		};
 
@@ -51,5 +56,6 @@ namespace psycris {
 		 */
 		hw::ram ram;
 		hw::rom rom;
+		hw::interrupt_control interrupt_control;
 	};
 }

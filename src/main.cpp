@@ -18,9 +18,7 @@ int main(int argc, char* argv[]) {
 	psycris::init_logging(cfg.verbose);
 
 	psycris::psx board;
-
-	// cpu::data_bus bus(bios, ram);
-	// cpu::mips cpu(&bus);
+	psycris::log->info("PSX board. Total memory={}", psycris::psx::board::memory_size());
 
 	std::ifstream f(cfg.bios_file, std::ios::binary | std::ios::in);
 	psycris::load_bios(f, board.rom.memory);

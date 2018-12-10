@@ -1,21 +1,12 @@
 #pragma once
 #include "../cpu/bus.hpp"
+#include "memory_range.hpp"
 
 #include <cstdint>
 #include <cstdlib>
 #include <gsl/span>
 
 namespace psycris::hw {
-	template <size_t Size>
-	struct memory_range {
-		static constexpr size_t size = Size;
-
-		memory_range(gsl::span<uint8_t, size> buffer) : memory{buffer} {
-		}
-
-		gsl::span<uint8_t, size> memory;
-	};
-
 	class ram : public cpu::data_port, public memory_range<2 * 1024 * 1024> {
 	  public:
 		using memory_range::memory_range;

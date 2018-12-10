@@ -47,7 +47,11 @@ namespace {
 
 namespace psycris {
 	psx::psx()
-	    : _board_memory(psx::board::memory_size()), cpu(_bus), ram(v<0>(_board_memory)), rom(v<1>(_board_memory)) {
+	    : _board_memory(psx::board::memory_size()),
+	      cpu(_bus),
+	      ram(v<0>(_board_memory)),
+	      rom(v<1>(_board_memory)),
+	      interrupt_control(v<2>(_board_memory), cpu.cop0) {
 
 		_bus.connect({0x1fc0'0000, 0x1fc8'0000}, rom);
 		_bus.connect({0x9fc0'0000, 0x9fc8'0000}, rom);
@@ -56,5 +60,7 @@ namespace psycris {
 		_bus.connect({0x0000'0000, 0x0020'0000}, ram);
 		_bus.connect({0x8000'0000, 0x8020'0000}, ram);
 		_bus.connect({0xa000'0000, 0xa020'0000}, ram);
+
+		_bus.connect({0x1f80'1070, 0x1f80'1078}, interrupt_control);
 	}
 }

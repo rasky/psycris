@@ -5,6 +5,7 @@ add_executable(psycris
     loader.cpp
     psx.cpp
     cpu/cpu.cpp
+    cpu/cop0.cpp
     cpu/bus.cpp
     cpu/disassembly.cpp
 )

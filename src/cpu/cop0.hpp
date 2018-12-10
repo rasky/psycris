@@ -43,6 +43,9 @@ namespace cpu {
 		}
 
 	  public:
+		void interrupt_request();
+
+	  public:
 		std::array<uint32_t, 32> regs;
 	};
 }
