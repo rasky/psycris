@@ -1,5 +1,8 @@
 #include "psx.hpp"
 
+#include <fmt/format.h>
+#include <stdexcept>
+
 namespace {
 	namespace hana = boost::hana;
 	using namespace hana::literals;
@@ -62,5 +65,28 @@ namespace psycris {
 		_bus.connect({0xa000'0000, 0xa020'0000}, ram);
 
 		_bus.connect({0x1f80'1070, 0x1f80'1078}, interrupt_control);
+	}
+}
+
+namespace psycris {
+	void dump_board(std::ostream& f, psx const& board) {
+		f.exceptions(std::ostream::eofbit | std::ostream::badbit);
+		f.write(reinterpret_cast<char const*>(&psx::board::rev), sizeof(uint16_t));
+
+		dump_cpu(f, board.cpu);
+		f.write(reinterpret_cast<char const*>(board._board_memory.data()), board._board_memory.size());
+	}
+
+	void restore_board(std::istream& f, psx& board) {
+		f.exceptions(std::ostream::eofbit | std::ostream::badbit);
+
+		uint16_t rev;
+		f.read(reinterpret_cast<char*>(&rev), sizeof(rev));
+		if (rev != psx::board::rev) {
+			throw std::runtime_error(fmt::format("cannot restore: unsupported revision {}", rev));
+		}
+
+		restore_cpu(f, board.cpu);
+		f.read(reinterpret_cast<char*>(board._board_memory.data()), board._board_memory.size());
 	}
 }

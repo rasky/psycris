@@ -1,6 +1,7 @@
 #include "cpu.hpp"
 #include "../logging.hpp"
 #include "disassembly.hpp"
+
 #include <cassert>
 #include <cstdlib>
 
@@ -275,6 +276,10 @@ namespace cpu {
 		}
 	}
 
+	uint64_t mips::ticks() const {
+		return clock;
+	}
+
 	template <typename T>
 	T mips::read(uint32_t addr) const {
 		constexpr uint8_t mask = bus_align<sizeof(T)>::mask;
@@ -334,5 +339,35 @@ namespace cpu {
 			// return std::nullopt;
 		}
 		c = r;
+	}
+
+	void dump_cpu(std::ostream& f, mips const& cpu) {
+		auto w = [&](auto& v) { f.write(reinterpret_cast<char const*>(&v), sizeof(v)); };
+
+		w(cpu.clock);
+		w(cpu.ins.ins);
+		w(cpu.pc);
+		w(cpu.next_ins.ins);
+		w(cpu.npc);
+
+		w(cpu.regs);
+		w(cpu.mult_regs);
+		w(cpu.cop0.regs);
+	}
+
+	void restore_cpu(std::istream& f, mips& cpu) {
+		auto r = [&](auto& v) { f.read(reinterpret_cast<char*>(&v), sizeof(v)); };
+
+		r(cpu.clock);
+		r(cpu.ins.ins);
+		r(cpu.pc);
+		r(cpu.next_ins.ins);
+		r(cpu.npc);
+
+		r(cpu.regs);
+		r(cpu.mult_regs);
+		r(cpu.cop0.regs);
+
+		cpu.clock--;
 	}
 }

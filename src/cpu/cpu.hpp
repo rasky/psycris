@@ -2,8 +2,10 @@
 #include "bus.hpp"
 #include "cop0.hpp"
 #include "decoder.hpp"
+
 #include <array>
 #include <cstdint>
+#include <iosfwd>
 
 namespace cpu {
 	class mips {
@@ -17,6 +19,8 @@ namespace cpu {
 		void reset();
 
 		void run(uint64_t until);
+
+		uint64_t ticks() const;
 
 	  private:
 		uint32_t& rs();
@@ -83,5 +87,29 @@ namespace cpu {
 		// mips.
 		decoder next_ins;
 		uint32_t npc;
+
+		friend void dump_cpu(std::ostream&, mips const&);
+		friend void restore_cpu(std::istream&, mips&);
 	};
+
+	/**
+	 * \brief Writes the cpu state into the output stream
+	 *
+	 * The following data are written using the stream unformatted functions:
+	 *
+	 * | Offset | Value               | Bytes
+	 * | ------ | ------------------- | -----
+	 * | 0      | clock               | 8
+	 * | 8      | current instruction | 4
+	 * | 12     | pc                  | 4
+	 * | 16     | next instruction    | 4
+	 * | 20     | npc                 | 4
+	 * | 24     | regs[0..31]         | 128
+	 * | 152    | mult regs (lo/hi)   | 8
+	 * | 160    | cop0 regs[0..31]    | 128
+	 *
+	 */
+	void dump_cpu(std::ostream&, mips const&);
+
+	void restore_cpu(std::istream&, mips&);
 }

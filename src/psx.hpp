@@ -6,6 +6,7 @@
 #include "hw/ram.hpp"
 
 #include "meta.hpp"
+#include <iosfwd>
 #include <vector>
 
 namespace psycris {
@@ -13,6 +14,11 @@ namespace psycris {
 	class psx {
 	  public:
 		struct board {
+			/**
+			 * \brief The board revision used as the verison of the dump files
+			 */
+			constexpr static uint16_t rev = 0x1;
+
 			using layout = std::tuple<hw::ram, hw::rom, hw::interrupt_control>;
 
 			constexpr static size_t memory_size() {
@@ -57,5 +63,11 @@ namespace psycris {
 		hw::ram ram;
 		hw::rom rom;
 		hw::interrupt_control interrupt_control;
+
+		friend void dump_board(std::ostream&, psx const&);
+		friend void restore_board(std::istream&, psx&);
 	};
+
+	void dump_board(std::ostream&, psx const&);
+	void restore_board(std::istream&, psx&);
 }
