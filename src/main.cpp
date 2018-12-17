@@ -4,9 +4,7 @@
 #include "logging.hpp"
 #include "psx.hpp"
 
-#include <cassert>
 #include <cstdlib>
-#include <fmt/format.h>
 #include <fstream>
 
 namespace {

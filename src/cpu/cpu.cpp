@@ -24,9 +24,7 @@ namespace {
 }
 
 namespace cpu {
-	mips::mips(data_bus& b) : bus{&b} {
-		reset();
-	}
+	mips::mips(data_bus& b) : bus{&b} { reset(); }
 
 	void mips::reset() {
 		regs.fill(0);
@@ -37,6 +35,16 @@ namespace cpu {
 
 		next_ins = mips::noop;
 		npc = mips::reset_vector;
+	}
+
+	void mips::trap(cop0::exc_code cause) {
+		cop0.epc() = pc;
+		cop0.enter_exception(cause);
+		if (sr_bits::BEV(cop0.sr()) == 0) {
+			npc = mips::exc_vector;
+		} else {
+			npc = mips::rom_exc_vector;
+		}
 	}
 
 	void mips::run(uint64_t until) {
@@ -262,6 +270,7 @@ namespace cpu {
 			}
 			return;
 		}
+
 		switch (ins.cop_subop()) {
 		case 0x00: // MFC
 			rt() = cop.regs[ins.rd()];
@@ -276,9 +285,7 @@ namespace cpu {
 		}
 	}
 
-	uint64_t mips::ticks() const {
-		return clock;
-	}
+	uint64_t mips::ticks() const { return clock; }
 
 	template <typename T>
 	T mips::read(uint32_t addr) const {
@@ -299,7 +306,8 @@ namespace cpu {
 			log->error("unaligned write at 0x{:0>8x} (TODO raise hw exception)", addr);
 			addr &= ~mask;
 		}
-		if (cop0.sr() & cop0::sr_bits::IsC) {
+
+		if (sr_bits::IsC(cop0.sr()) != 0) {
 			// the cache is "isolated", but I don't want to implement the exact
 			// behavior, for now just ignore the request.
 			if (val != 0) {
@@ -307,28 +315,19 @@ namespace cpu {
 			}
 			return;
 		}
+
 		bus->write(addr, val);
 	}
 
-	uint32_t& mips::rs() {
-		return regs[ins.rs()];
-	}
+	uint32_t& mips::rs() { return regs[ins.rs()]; }
 
-	uint32_t& mips::rt() {
-		return regs[ins.rt()];
-	}
+	uint32_t& mips::rt() { return regs[ins.rt()]; }
 
-	uint32_t& mips::rd() {
-		return regs[ins.rd()];
-	}
+	uint32_t& mips::rd() { return regs[ins.rd()]; }
 
-	uint32_t& mips::hi() {
-		return mult_regs[1];
-	}
+	uint32_t& mips::hi() { return mult_regs[1]; }
 
-	uint32_t& mips::lo() {
-		return mult_regs[0];
-	}
+	uint32_t& mips::lo() { return mult_regs[0]; }
 
 	template <typename B>
 	void mips::add_with_overflow(uint32_t& c, uint32_t a, B b) {

@@ -10,16 +10,23 @@
 namespace cpu {
 	class mips {
 	  public:
+		static const uint32_t exc_vector = 0x8000'0080;
+		static const uint32_t rom_exc_vector = 0xbfc0'0180;
 		static const uint32_t reset_vector = 0x1FC0'0000;
+
 		static const uint32_t noop = 0;
 
 	  public:
 		mips(data_bus&);
 
+	  public:
 		void reset();
+
+		void trap(cop0::exc_code);
 
 		void run(uint64_t until);
 
+	  public:
 		uint64_t ticks() const;
 
 	  private:
