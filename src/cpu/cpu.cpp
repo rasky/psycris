@@ -92,11 +92,20 @@ namespace cpu {
 					rd() = npc;
 					npc = rs();
 					break;
+				case 0x0c: // SYSCALL -- System Call
+					trap(cop0::Syscall);
+					break;
 				case 0x10: // MFHI -- Move From Hi
 					rd() = hi();
 					break;
+				case 0x11: // MTHI -- Move To Hi
+					hi() = rs();
+					break;
 				case 0x12: // MFLO -- Move From Lo
 					rd() = lo();
+					break;
+				case 0x13: // MTLO -- Move To Lo
+					lo() = rs();
 					break;
 				case 0x1a: { // DIV -- Divide Word
 					auto r = std::div(static_cast<int32_t>(rs()), static_cast<int32_t>(rt()));
