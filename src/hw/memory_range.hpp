@@ -6,8 +6,7 @@ namespace psycris::hw {
 	struct memory_range {
 		static constexpr size_t size = Bytes;
 
-		memory_range(gsl::span<uint8_t, size> buffer) : memory{buffer} {
-		}
+		memory_range(gsl::span<uint8_t, size> buffer) : memory{buffer} {}
 
 		gsl::span<uint8_t, size> memory;
 	};

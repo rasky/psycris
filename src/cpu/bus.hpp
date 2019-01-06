@@ -4,15 +4,6 @@
 
 namespace cpu {
 	/**
-	 * \brief given an IO addres returns a string describing its use
-	 *
-	 * This function is intended to be used during the debug only.
-	 */
-	std::string guess_io_port(uint32_t addr);
-}
-
-namespace cpu {
-	/**
 	 * \brief An interface for a data_port, an hw device connected to the cpu
 	 * bus.
 	 *
@@ -104,9 +95,7 @@ namespace cpu {
 		uint32_t start;
 		uint32_t end;
 
-		bool operator&(uint32_t v) const {
-			return v >= start && v <= end;
-		}
+		bool operator&(uint32_t v) const { return v >= start && v <= end; }
 	};
 
 	class data_bus {
@@ -125,9 +114,7 @@ namespace cpu {
 		};
 
 	  public:
-		void connect(address_range r, data_port& dp) {
-			ports.push_back({r, &dp});
-		}
+		void connect(address_range r, data_port& dp) { ports.push_back({r, &dp}); }
 
 	  public:
 		template <typename T>
@@ -138,7 +125,7 @@ namespace cpu {
 			auto pos = std::find_if(std::begin(ports), std::end(ports), [=](port_map& m) { return m.range & addr; });
 			if (pos == std::end(ports)) {
 				psycris::log->warn(
-				    "[BUS] unmapped read of {} bytes at {:0>8x} ({})", sizeof(T), addr, guess_io_port(addr));
+				    "[BUS] unmapped read of {} bytes at {:0>8x} ({})", sizeof(T), addr, "guess_io_port(addr)");
 				return static_cast<T>(open_bus);
 			}
 
@@ -157,7 +144,7 @@ namespace cpu {
 				                   sizeof(T),
 				                   addr,
 				                   val,
-				                   guess_io_port(addr));
+				                   "guess_io_port(addr)");
 				return;
 			}
 
