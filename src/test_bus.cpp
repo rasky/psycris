@@ -14,12 +14,17 @@ namespace {
 	struct controller : hw::mmap_device<controller, 12> {
 		controller(gsl::span<uint8_t, size> buffer) : mmap_device{buffer, reg1{}, reg2{}, reg3{}, reg4{}} {}
 
-		void wcb(reg1, uint32_t value) { writes[0].push_back(value); }
-		void wcb(reg2, uint32_t value) { writes[1].push_back(value); }
-		void wcb(reg3, uint32_t value) { writes[2].push_back(value); }
-		void wcb(reg4, uint32_t value) { writes[4].push_back(value); }
+		struct logged_value {
+			uint32_t curr;
+			uint32_t old;
+		};
 
-		std::array<std::vector<uint32_t>, 4> writes = {};
+		void wcb(reg1, uint32_t value, uint32_t old_value) { writes[0].push_back({value, old_value}); }
+		void wcb(reg2, uint32_t value, uint32_t old_value) { writes[1].push_back({value, old_value}); }
+		void wcb(reg3, uint32_t value, uint32_t old_value) { writes[2].push_back({value, old_value}); }
+		void wcb(reg4, uint32_t value, uint32_t old_value) { writes[4].push_back({value, old_value}); }
+
+		std::array<std::vector<logged_value>, 4> writes = {};
 	};
 
 	struct ram : hw::mmap_device<ram, 10> {
@@ -122,23 +127,40 @@ TEST_CASE("data_bus write operations", "[bus]") {
 	}
 
 	SECTION("the bus can inform a device of each write made") {
-		uint16_t v = 0xaa00;
-
-		bus.write(board.ctrl_addr + reg3::offset, v);
+		bus.write(board.ctrl_addr + reg3::offset, static_cast<uint16_t>(0xaa00));
 		REQUIRE(board.ctrl.writes[2].size() == 1);
-		REQUIRE(board.ctrl.writes[2].back() == v);
+		auto logged = board.ctrl.writes[2].back();
+		REQUIRE(logged.curr == 0xaa00);
+		REQUIRE(logged.old == 0x0706);
 
-		v += 1;
-		bus.write(board.ctrl_addr + reg3::offset, v);
+		bus.write(board.ctrl_addr + reg3::offset, static_cast<uint16_t>(0xaa01));
 		REQUIRE(board.ctrl.writes[2].size() == 2);
-		REQUIRE(board.ctrl.writes[2].back() == v);
+		logged = board.ctrl.writes[2].back();
+		REQUIRE(logged.curr == 0xaa01);
+		REQUIRE(logged.old == 0xaa00);
+
+		SECTION("even if only a subset of a port is written") {
+			bus.write(board.ctrl_addr + 1, static_cast<uint16_t>(0xffff));
+			auto logged = board.ctrl.writes[0].back();
+			REQUIRE(logged.curr == 0x03ff'ff00);
+			REQUIRE(logged.old == 0x0302'0100);
+		}
 
 		SECTION("the device is informed for every port written") {
 			uint32_t v = 0xdead'beef;
 			bus.write(board.ctrl_addr + reg2::offset - 1, v);
-			REQUIRE(board.ctrl.writes[0].back() == 0xef02'0100);
-			REQUIRE(board.ctrl.writes[1].back() == 0xadbe);
-			REQUIRE(board.ctrl.writes[2].back() == 0xaade);
+
+			auto logged = board.ctrl.writes[0].back();
+			REQUIRE(logged.curr == 0xef02'0100);
+			REQUIRE(logged.old == 0x0302'0100);
+
+			logged = board.ctrl.writes[1].back();
+			REQUIRE(logged.curr == 0xadbe);
+			REQUIRE(logged.old == 0x0504);
+
+			logged = board.ctrl.writes[2].back();
+			REQUIRE(logged.curr == 0xaade);
+			REQUIRE(logged.old == 0xaa01);
 		}
 	}
 }

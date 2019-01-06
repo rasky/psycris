@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -59,8 +60,14 @@ namespace psycris::bus {
 		 * updated.
 		 *
 		 * \param new_value the new value for this port
+		 * \param old_value the previous value of this port
+		 *
+		 * The type for the two values is always `uint32_t` even if the write
+		 * was smaller (in this case the upper bits of the values are set to
+		 * zero). This decision was made to only require a single virtual
+		 * method.
 		 */
-		virtual void post_write(uint32_t new_value) = 0;
+		virtual void post_write(uint32_t new_value, uint32_t old_value) = 0;
 
 	  private:
 		uint8_t _offset;
@@ -155,8 +162,9 @@ namespace psycris::bus {
 				return;
 			}
 
+			T prev_value = read<T>(*device, addr);
 			write(*device, addr, val);
-			touch_data_ports<T>(*device, addr);
+			touch_data_ports<T>(*device, addr, prev_value);
 		}
 
 	  private:
@@ -196,9 +204,15 @@ namespace psycris::bus {
 		}
 
 		template <typename T>
-		void touch_data_ports(device_map const& map, uint32_t addr) {
-			int8_t written = sizeof(T);
+		void touch_data_ports(device_map const& map, uint32_t addr, T overwritten_value) {
+			int8_t written_bytes = sizeof(T);
+
+			// where the write starts from the device POV
 			uint32_t device_offset = map.offset(addr);
+
+			// a char pointer to the overwritten value; it is used to recover
+			// the old value for every port
+			auto over = reinterpret_cast<char*>(&overwritten_value);
 
 			for (auto& port : map.d->ports()) {
 				uint32_t next_port_offset = port->offset() + port->size();
@@ -208,16 +222,30 @@ namespace psycris::bus {
 					continue;
 				}
 
-				port->post_write(read(map, *port));
+				// how many bytes of this port are touched by this write
+				uint8_t port_bytes = std::min(gsl::narrow_cast<int8_t>(next_port_offset - device_offset),
+				                              written_bytes);
+				{
+					uint32_t new_value = read(map, *port);
+					uint32_t old_value = new_value;
 
-				written -= next_port_offset - device_offset;
-				if (written <= 0) {
+					// `p` points to the overwritten portion of `old_value`
+					auto p = reinterpret_cast<char*>(&old_value) + (device_offset - port->offset());
+					std::memcpy(p, over, port_bytes);
+
+					port->post_write(new_value, old_value);
+				}
+
+				written_bytes -= port_bytes;
+				if (written_bytes <= 0) {
 					break;
 				}
 
+				over += port_bytes;
 				device_offset = next_port_offset;
 			}
-			if (written > 0) {
+
+			if (written_bytes > 0) {
 				assert(!"TODO implement a multi-device write");
 			}
 		}

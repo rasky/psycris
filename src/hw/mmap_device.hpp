@@ -34,12 +34,12 @@ namespace psycris::hw {
 			__attribute__((no_sanitize("vptr"))) mmap_data_port(mmap_device* d)
 			    : bus::data_port{DataPort::offset, DataPort::size}, _device{static_cast<Derived*>(d)} {}
 
-			void post_write([[maybe_unused]] uint32_t new_value) override {
-				auto has_write_callback =
-				    hana::is_valid([](auto&& port) -> decltype(std::declval<Derived>().wcb(port, 0)) {});
+			void post_write([[maybe_unused]] uint32_t new_value, uint32_t old_value) override {
+				auto has_write_callback = hana::is_valid(                                     //
+				    [](auto&& port) -> decltype(std::declval<Derived>().wcb(port, 0, 0)) {}); //
 
 				if constexpr (has_write_callback(DataPort{})) {
-					_device->wcb(DataPort{}, new_value);
+					_device->wcb(DataPort{}, new_value, old_value);
 				}
 			}
 
