@@ -6,13 +6,9 @@ namespace {
 		uint32_t addr;
 		uint32_t mask;
 
-		bool operator==(io_port o) const {
-			return addr == o.addr && mask == o.mask;
-		}
+		bool operator==(io_port o) const { return addr == o.addr && mask == o.mask; }
 
-		bool operator==(uint32_t a) const {
-			return (addr & ~mask) == a;
-		}
+		bool operator==(uint32_t a) const { return (addr & ~mask) == a; }
 	};
 }
 
@@ -316,7 +312,7 @@ namespace {
 	};
 }
 
-namespace cpu {
+namespace psycris::bus {
 	std::string guess_io_port(uint32_t addr) {
 		addr &= 0x1fff'ffff;
 		for (auto& [port, d] : io_map) {

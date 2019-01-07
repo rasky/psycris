@@ -1,22 +1,35 @@
 #pragma once
-#include "bus.hpp"
+#include "../hw/bus.hpp"
 #include "cop0.hpp"
 #include "decoder.hpp"
+
 #include <array>
 #include <cstdint>
+#include <iosfwd>
+
+namespace bus = psycris::bus;
 
 namespace cpu {
 	class mips {
 	  public:
+		static const uint32_t exc_vector = 0x8000'0080;
+		static const uint32_t rom_exc_vector = 0xbfc0'0180;
 		static const uint32_t reset_vector = 0x1FC0'0000;
+
 		static const uint32_t noop = 0;
 
 	  public:
-		mips(data_bus*);
+		mips(bus::data_bus&);
 
+	  public:
 		void reset();
 
+		void trap(cop0::exc_code);
+
 		void run(uint64_t until);
+
+	  public:
+		uint64_t ticks() const;
 
 	  private:
 		uint32_t& rs();
@@ -53,7 +66,7 @@ namespace cpu {
 		template <typename Coprocessor>
 		void run_cop(Coprocessor&);
 
-	  private:
+	  public:
 		std::array<uint32_t, 32> regs;
 
 		// The two registers associated with the integer multipler.
@@ -63,11 +76,13 @@ namespace cpu {
 		// of a divide.
 		std::array<uint32_t, 2> mult_regs;
 
-		uint64_t clock;
-
-		data_bus* bus;
+		cpu::cop0 cop0;
 
 	  private:
+		uint64_t clock;
+
+		bus::data_bus* bus;
+
 		// the current instruction; the one executed during this clock cycle
 		decoder ins;
 		// the pc of the current instruction
@@ -82,6 +97,28 @@ namespace cpu {
 		decoder next_ins;
 		uint32_t npc;
 
-		cpu::cop0 cop0;
+		friend void dump_cpu(std::ostream&, mips const&);
+		friend void restore_cpu(std::istream&, mips&);
 	};
+
+	/**
+	 * \brief Writes the cpu state into the output stream
+	 *
+	 * The following data are written using the stream unformatted functions:
+	 *
+	 * | Offset | Value               | Bytes
+	 * | ------ | ------------------- | -----
+	 * | 0      | clock               | 8
+	 * | 8      | current instruction | 4
+	 * | 12     | pc                  | 4
+	 * | 16     | next instruction    | 4
+	 * | 20     | npc                 | 4
+	 * | 24     | regs[0..31]         | 128
+	 * | 152    | mult regs (lo/hi)   | 8
+	 * | 160    | cop0 regs[0..31]    | 128
+	 *
+	 */
+	void dump_cpu(std::ostream&, mips const&);
+
+	void restore_cpu(std::istream&, mips&);
 }

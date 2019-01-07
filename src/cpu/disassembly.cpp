@@ -40,12 +40,9 @@ namespace {
 	struct opaque {
 		T value;
 
-		opaque(T v) : value{v} {
-		}
+		opaque(T v) : value{v} {}
 
-		operator T() const {
-			return value;
-		}
+		operator T() const { return value; }
 	};
 
 	using reg = opaque<uint8_t, class reg_>;
@@ -93,25 +90,15 @@ namespace {
 	}
 
 	struct decoder : cpu::decoder {
-		reg rs() const {
-			return reg{cpu::decoder::rs()};
-		}
+		reg rs() const { return reg{cpu::decoder::rs()}; }
 
-		reg rt() const {
-			return reg{cpu::decoder::rt()};
-		}
+		reg rt() const { return reg{cpu::decoder::rt()}; }
 
-		reg rd() const {
-			return reg{cpu::decoder::rd()};
-		}
+		reg rd() const { return reg{cpu::decoder::rd()}; }
 
-		i5 shamt() const {
-			return i5{cpu::decoder::shamt()};
-		}
+		i5 shamt() const { return i5{cpu::decoder::shamt()}; }
 
-		i16 uimm() const {
-			return cpu::decoder::uimm();
-		}
+		i16 uimm() const { return cpu::decoder::uimm(); }
 	};
 }
 
@@ -150,7 +137,9 @@ namespace {
 		{0x09, "jalr {rd}, {rs}"},
 		{0x0c, "syscall"},
         {0x10, "mfhi {rd}"},
+        {0x11, "mthi {rs}"},
         {0x12, "mflo {rd}"},
+        {0x13, "mtlo {rs}"},
         {0x1a, "div {rs}, {rt}"},
         {0x1b, "divu {rs}, {rt}"},
 		{0x20, "add {rd}, {rs}, {rt}"},

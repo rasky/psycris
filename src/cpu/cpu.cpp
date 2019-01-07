@@ -1,6 +1,7 @@
 #include "cpu.hpp"
 #include "../logging.hpp"
 #include "disassembly.hpp"
+
 #include <cassert>
 #include <cstdlib>
 
@@ -23,9 +24,7 @@ namespace {
 }
 
 namespace cpu {
-	mips::mips(data_bus* b) : bus{b} {
-		reset();
-	}
+	mips::mips(bus::data_bus& b) : bus{&b} { reset(); }
 
 	void mips::reset() {
 		regs.fill(0);
@@ -36,6 +35,16 @@ namespace cpu {
 
 		next_ins = mips::noop;
 		npc = mips::reset_vector;
+	}
+
+	void mips::trap(cop0::exc_code cause) {
+		cop0.epc() = pc;
+		cop0.enter_exception(cause);
+		if (sr_bits::BEV(cop0.sr()) == 0) {
+			npc = mips::exc_vector;
+		} else {
+			npc = mips::rom_exc_vector;
+		}
 	}
 
 	void mips::run(uint64_t until) {
@@ -83,11 +92,20 @@ namespace cpu {
 					rd() = npc;
 					npc = rs();
 					break;
+				case 0x0c: // SYSCALL -- System Call
+					trap(cop0::Syscall);
+					break;
 				case 0x10: // MFHI -- Move From Hi
 					rd() = hi();
 					break;
+				case 0x11: // MTHI -- Move To Hi
+					hi() = rs();
+					break;
 				case 0x12: // MFLO -- Move From Lo
 					rd() = lo();
+					break;
+				case 0x13: // MTLO -- Move To Lo
+					lo() = rs();
 					break;
 				case 0x1a: { // DIV -- Divide Word
 					auto r = std::div(static_cast<int32_t>(rs()), static_cast<int32_t>(rt()));
@@ -261,6 +279,7 @@ namespace cpu {
 			}
 			return;
 		}
+
 		switch (ins.cop_subop()) {
 		case 0x00: // MFC
 			rt() = cop.regs[ins.rd()];
@@ -274,6 +293,8 @@ namespace cpu {
 			assert(0);
 		}
 	}
+
+	uint64_t mips::ticks() const { return clock; }
 
 	template <typename T>
 	T mips::read(uint32_t addr) const {
@@ -294,7 +315,8 @@ namespace cpu {
 			log->error("unaligned write at 0x{:0>8x} (TODO raise hw exception)", addr);
 			addr &= ~mask;
 		}
-		if (cop0.sr() & cop0::sr_bits::IsC) {
+
+		if (sr_bits::IsC(cop0.sr()) != 0) {
 			// the cache is "isolated", but I don't want to implement the exact
 			// behavior, for now just ignore the request.
 			if (val != 0) {
@@ -302,28 +324,19 @@ namespace cpu {
 			}
 			return;
 		}
+
 		bus->write(addr, val);
 	}
 
-	uint32_t& mips::rs() {
-		return regs[ins.rs()];
-	}
+	uint32_t& mips::rs() { return regs[ins.rs()]; }
 
-	uint32_t& mips::rt() {
-		return regs[ins.rt()];
-	}
+	uint32_t& mips::rt() { return regs[ins.rt()]; }
 
-	uint32_t& mips::rd() {
-		return regs[ins.rd()];
-	}
+	uint32_t& mips::rd() { return regs[ins.rd()]; }
 
-	uint32_t& mips::hi() {
-		return mult_regs[1];
-	}
+	uint32_t& mips::hi() { return mult_regs[1]; }
 
-	uint32_t& mips::lo() {
-		return mult_regs[0];
-	}
+	uint32_t& mips::lo() { return mult_regs[0]; }
 
 	template <typename B>
 	void mips::add_with_overflow(uint32_t& c, uint32_t a, B b) {
@@ -334,5 +347,35 @@ namespace cpu {
 			// return std::nullopt;
 		}
 		c = r;
+	}
+
+	void dump_cpu(std::ostream& f, mips const& cpu) {
+		auto w = [&](auto& v) { f.write(reinterpret_cast<char const*>(&v), sizeof(v)); };
+
+		w(cpu.clock);
+		w(cpu.ins.ins);
+		w(cpu.pc);
+		w(cpu.next_ins.ins);
+		w(cpu.npc);
+
+		w(cpu.regs);
+		w(cpu.mult_regs);
+		w(cpu.cop0.regs);
+	}
+
+	void restore_cpu(std::istream& f, mips& cpu) {
+		auto r = [&](auto& v) { f.read(reinterpret_cast<char*>(&v), sizeof(v)); };
+
+		r(cpu.clock);
+		r(cpu.ins.ins);
+		r(cpu.pc);
+		r(cpu.next_ins.ins);
+		r(cpu.npc);
+
+		r(cpu.regs);
+		r(cpu.mult_regs);
+		r(cpu.cop0.regs);
+
+		cpu.clock--;
 	}
 }

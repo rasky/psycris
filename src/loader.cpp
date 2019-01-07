@@ -72,74 +72,74 @@ namespace {
 	    0x0,
 	};
 
-	void load_exe_bios(cpu::data_bus& bus, uint32_t pc, uint32_t gp, uint32_t sp) {
-		uint32_t exe_args[] = {gp, sp, pc};
+	// void load_exe_bios(cpu::data_bus& bus, uint32_t pc, uint32_t gp, uint32_t sp) {
+	// 	uint32_t exe_args[] = {gp, sp, pc};
 
-		auto args = bus.bios_slice(0x1fc0'1000, sizeof(exe_args));
-		std::copy_n(reinterpret_cast<uint8_t*>(exe_bios), sizeof(exe_bios), bus.bios.data());
-		std::copy_n(reinterpret_cast<uint8_t*>(exe_args), sizeof(exe_args), args.data());
-	}
+	// 	auto args = bus.bios_slice(0x1fc0'1000, sizeof(exe_args));
+	// 	std::copy_n(reinterpret_cast<uint8_t*>(exe_bios), sizeof(exe_bios), bus.bios.data());
+	// 	std::copy_n(reinterpret_cast<uint8_t*>(exe_args), sizeof(exe_args), args.data());
+	// }
 }
 
 namespace psycris {
 	using psycris::log;
 
-	void load_bios(std::istream& in, cpu::data_bus& bus) {
-		auto ptr = reinterpret_cast<char*>(bus.bios.data());
-		if (!in.read(ptr, bus.bios.size())) {
+	void load_bios(std::istream& in, gsl::span<uint8_t> buffer) {
+		auto ptr = reinterpret_cast<char*>(buffer.data());
+		if (!in.read(ptr, buffer.size())) {
 			log->critical("cannot read BIOS");
 			std::exit(2);
 		}
 	}
 
-	void load_exe(std::istream& in, cpu::data_bus& bus) {
-		exe_header hdr;
+	// void load_exe(std::istream& in, cpu::data_bus& bus) {
+	// 	exe_header hdr;
 
-		if (!in.read(reinterpret_cast<char*>(&hdr), sizeof(hdr))) {
-			log->critical("cannot read the EXE header");
-			std::exit(2);
-		}
+	// 	if (!in.read(reinterpret_cast<char*>(&hdr), sizeof(hdr))) {
+	// 		log->critical("cannot read the EXE header");
+	// 		std::exit(2);
+	// 	}
 
-		// there is not parsing nor validation for the file header, just a bit
-		// of logging to ease the debug
-		if (hdr.id() != "PS-X EXE") {
-			log->warn("header magic string not found! expected=<PS-X EXE> found=<{}>", hdr.id());
-		}
+	// 	// there is not parsing nor validation for the file header, just a bit
+	// 	// of logging to ease the debug
+	// 	if (hdr.id() != "PS-X EXE") {
+	// 		log->warn("header magic string not found! expected=<PS-X EXE> found=<{}>", hdr.id());
+	// 	}
 
-		log->trace("exe header PC=0x{:0>8x} GP=0x{:0>8x} SP/FP=(0x{:0>8x} + 0x{:0>8x})",
-		           hdr.pc,
-		           hdr.gp,
-		           hdr.sp_base,
-		           hdr.sp_offset);
-		log->trace("exe header ZEROFILL=0x{:0>8x}#{}", hdr.memfill_start, hdr.memfill_size);
+	// 	log->trace("exe header PC=0x{:0>8x} GP=0x{:0>8x} SP/FP=(0x{:0>8x} + 0x{:0>8x})",
+	// 	           hdr.pc,
+	// 	           hdr.gp,
+	// 	           hdr.sp_base,
+	// 	           hdr.sp_offset);
+	// 	log->trace("exe header ZEROFILL=0x{:0>8x}#{}", hdr.memfill_start, hdr.memfill_size);
 
-		log->info("loading {} bytes into 0x{:>8x}:0x{:>8x}", //
-		          hdr.exe_size,                              //
-		          hdr.load_address,                          //
-		          hdr.load_address + hdr.exe_size);          //
-		log->info("exe from \"{}\"", hdr.marker());
-		if (hdr.exe_size % 2048 != 0) {
-			log->warn("exe size must be a multiple of 2048, it is {} instead", hdr.exe_size);
-		}
+	// 	log->info("loading {} bytes into 0x{:>8x}:0x{:>8x}", //
+	// 	          hdr.exe_size,                              //
+	// 	          hdr.load_address,                          //
+	// 	          hdr.load_address + hdr.exe_size);          //
+	// 	log->info("exe from \"{}\"", hdr.marker());
+	// 	if (hdr.exe_size % 2048 != 0) {
+	// 		log->warn("exe size must be a multiple of 2048, it is {} instead", hdr.exe_size);
+	// 	}
 
-		// the load of an exe is divided in three steps:
-		//
-		// 1 - zero the requested memory
-		// 2 - load the exe code at the requested address
-		// 3 - load a minimal bios to initialize the register and jump at the
-		// begin of the exe
-		if (hdr.memfill_start && hdr.memfill_size) {
-			auto zero = bus.ram_slice(hdr.memfill_start, hdr.memfill_size);
-			std::fill(zero.begin(), zero.end(), 0);
-		}
+	// 	// the load of an exe is divided in three steps:
+	// 	//
+	// 	// 1 - zero the requested memory
+	// 	// 2 - load the exe code at the requested address
+	// 	// 3 - load a minimal bios to initialize the register and jump at the
+	// 	// begin of the exe
+	// 	if (hdr.memfill_start && hdr.memfill_size) {
+	// 		auto zero = bus.ram_slice(hdr.memfill_start, hdr.memfill_size);
+	// 		std::fill(zero.begin(), zero.end(), 0);
+	// 	}
 
-		auto code = bus.ram_slice(hdr.load_address, hdr.exe_size);
-		in.seekg(2048);
-		if (!in.read(reinterpret_cast<char*>(code.data()), code.size())) {
-			log->critical("cannot read the EXE data");
-			std::exit(2);
-		}
+	// 	auto code = bus.ram_slice(hdr.load_address, hdr.exe_size);
+	// 	in.seekg(2048);
+	// 	if (!in.read(reinterpret_cast<char*>(code.data()), code.size())) {
+	// 		log->critical("cannot read the EXE data");
+	// 		std::exit(2);
+	// 	}
 
-		load_exe_bios(bus, hdr.pc, hdr.gp, hdr.sp_base + hdr.sp_offset);
-	}
+	// 	load_exe_bios(bus, hdr.pc, hdr.gp, hdr.sp_base + hdr.sp_offset);
+	// }
 }
