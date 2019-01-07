@@ -33,12 +33,25 @@ namespace psycris::hw {
 	template <typename Derived, size_t MemoryBytes>
 	class mmap_device : public bus::device {
 	  private:
+		/**
+		 * \brief a `bus::data_port` that forwards the `post_write` callback to the `Derived` subclass.
+		 *
+		 * \tparam DataPort is a specialization of `data_reg`; the `post_write`
+		 * method of this specific class calls the `wcb()` method in the
+		 * `Derived` one that accepts an instance of this type as the first
+		 * argument. The `Derived` class is not required to define a method for
+		 * every `DataPort`.s
+		 */
 		template <typename DataPort>
 		struct mmap_data_port : public bus::data_port {
+			// silence the ubsan; we are casting a mmap_device* to Derived*
+			// before the latter is constructed. Using now  such pointer is
+			// obviously wrong, but we will use it later, in the post_write
+			// method, when the Derived class is correctly built.
 			__attribute__((no_sanitize("vptr"))) mmap_data_port(mmap_device* d)
 			    : bus::data_port{DataPort::offset, DataPort::size}, _device{static_cast<Derived*>(d)} {}
 
-			void post_write([[maybe_unused]] uint32_t new_value, [[maybe_unused]] uint32_t old_value) override {
+			void post_write([[maybe_unused]] uint32_t new_value, [[maybe_unused]] uint32_t old_value) const override {
 				auto has_write_callback = hana::is_valid(
 				    [](auto&& port) -> decltype(std::declval<Derived>().wcb(port, 0, 0)) {});
 
@@ -63,7 +76,7 @@ namespace psycris::hw {
 	  public:
 		gsl::span<uint8_t> memory() const override { return _memory; }
 
-		std::vector<std::unique_ptr<bus::data_port>> const& ports() const override { return _ports; }
+		std::vector<bus::data_port const*> const& ports() override { return _ports_ptrs; }
 
 	  protected:
 		template <typename DataPort>
@@ -80,6 +93,7 @@ namespace psycris::hw {
 				using T = typename decltype(reg)::type;
 				return hana::int_c<T::offset>;
 			};
+			// a tuple of type_t sorted by the port offset
 			constexpr auto types = hana::sort.by(hana::ordering(get_offset), hana::tuple_t<DataPorts...>);
 
 			constexpr auto last_port = hana::back(types);
@@ -89,14 +103,34 @@ namespace psycris::hw {
 
 			static_assert(!details::ports_overlaps(types), "a data port overlaps");
 
-			hana::for_each(types, [&](auto port) {
-				using DataPort = typename decltype(port)::type;
-				_ports.push_back(std::make_unique<mmap_data_port<DataPort>>(this));
+			hana::for_each(types, [&](auto port_def) {
+				using DataPort = typename decltype(port_def)::type;
+
+				auto port = std::make_unique<mmap_data_port<DataPort>>(this);
+				_ports_ptrs.push_back(port.get());
+				_ports.push_back(std::move(port));
 			});
 		}
 
 	  private:
+		/**
+		 * \brief the device memory (not owned by this class)
+		 */
 		gsl::span<uint8_t, MemoryBytes> _memory;
+
+		/**
+		 * \brief The device data ports (if any).
+		 */
 		std::vector<std::unique_ptr<bus::data_port>> _ports;
+
+		/**
+		 * \brief a copy of the `_ports` vector used to implement the `device`
+		 * interface.
+		 *
+		 * The `ports()` method must return a const-ref to an already existent
+		 * vector, but i don't want to ditch the unique pointers from the
+		 * `_ports` member.
+		 */
+		std::vector<bus::data_port const*> _ports_ptrs;
 	};
 }

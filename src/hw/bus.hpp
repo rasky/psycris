@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include <gsl/span>
-#include <memory>
 #include <vector>
 
 #include "../logging.hpp"
@@ -67,7 +66,7 @@ namespace psycris::bus {
 		 * zero). This decision was made to only require a single virtual
 		 * method.
 		 */
-		virtual void post_write(uint32_t new_value, uint32_t old_value) = 0;
+		virtual void post_write(uint32_t new_value, uint32_t old_value) const = 0;
 
 	  private:
 		uint8_t _offset;
@@ -84,13 +83,13 @@ namespace psycris::bus {
 		 */
 		virtual gsl::span<uint8_t> memory() const = 0;
 
-		// TODO change the return value to one of these:
-		// - std::vector<data_port [*&] [const]>
-		// - gsl::span<data_port [*&] [const]>
 		/**
 		 * \brief returns this device data ports
+		 *
+		 * \return std::vector<bus::data_port const*> const& with the device
+		 * ports sorted by their offset.
 		 */
-		virtual std::vector<std::unique_ptr<data_port>> const& ports() const = 0;
+		virtual std::vector<bus::data_port const*> const& ports() = 0;
 	};
 
 	struct address_range {
@@ -185,7 +184,7 @@ namespace psycris::bus {
 			return value;
 		}
 
-		uint32_t read(device_map const& map, data_port& port) const {
+		uint32_t read(device_map const& map, data_port const& port) const {
 			uint32_t value;
 			auto device_memory = map.d->memory();
 			std::memcpy(&value, &device_memory[port.offset()], sizeof(value));
