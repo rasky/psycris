@@ -35,6 +35,7 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
 
 PenaltyBreakString: 100
+PenaltyBreakAssignment: 100
 
 # ReflowComments: true
 SortIncludes: true
