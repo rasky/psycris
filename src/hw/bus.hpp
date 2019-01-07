@@ -245,9 +245,9 @@ namespace psycris::bus {
 				device_offset = next_port_offset;
 			}
 
-			if (written_bytes > 0) {
-				assert(!"TODO implement a multi-device write");
-			}
+			// if (written_bytes > 0) {
+			// 	assert(!"TODO implement a multi-device write");
+			// }
 		}
 
 	  private:

@@ -1,11 +1,13 @@
 #pragma once
-#include "bus.hpp"
+#include "../hw/bus.hpp"
 #include "cop0.hpp"
 #include "decoder.hpp"
 
 #include <array>
 #include <cstdint>
 #include <iosfwd>
+
+namespace bus = psycris::bus;
 
 namespace cpu {
 	class mips {
@@ -17,7 +19,7 @@ namespace cpu {
 		static const uint32_t noop = 0;
 
 	  public:
-		mips(data_bus&);
+		mips(bus::data_bus&);
 
 	  public:
 		void reset();
@@ -79,7 +81,7 @@ namespace cpu {
 	  private:
 		uint64_t clock;
 
-		data_bus* bus;
+		bus::data_bus* bus;
 
 		// the current instruction; the one executed during this clock cycle
 		decoder ins;

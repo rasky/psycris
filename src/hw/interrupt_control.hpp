@@ -1,37 +1,23 @@
 #pragma once
-#include "../cpu/bus.hpp"
-#include "../cpu/cop0.hpp"
-#include "memory_range.hpp"
+#include "bus.hpp"
+#include "mmap_device.hpp"
 
-#include <fmt/format.h>
+namespace cpu {
+	class cop0;
+}
 
 namespace psycris::hw {
-	class interrupt_control : public cpu::data_port, public memory_range<8> {
+	class interrupt_control : public mmap_device<interrupt_control, 8> {
 	  public:
-		interrupt_control(gsl::span<uint8_t, size> buffer, cpu::cop0& cop0) : memory_range(buffer), _cop0(&cop0) {
-		}
+		interrupt_control(gsl::span<uint8_t, size> buffer, cpu::cop0& cop);
 
 	  public:
-		constexpr static uint32_t i_stat = 0;
-		constexpr static uint32_t i_mask = 0;
+		using i_stat = data_reg<0>;
+		using i_mask = data_reg<4>;
 
-		uint32_t read32(uint32_t offset) const override {
-			return *(reinterpret_cast<uint32_t*>(&memory[offset]));
-		}
-
-		void write32(uint32_t offset, uint32_t val) override {
-			uint32_t p = read32(i_stat);
-			*(reinterpret_cast<uint32_t*>(&memory[offset])) = val;
-
-			if (offset == i_stat) {
-				p = (p ^ val) & read32(i_mask);
-				if (p) {
-					_cop0->interrupt_request();
-				}
-			}
-		}
+		void wcb(i_stat, uint32_t new_value, uint32_t old_value);
 
 	  private:
-		cpu::cop0* _cop0;
+		cpu::cop0* cop0;
 	};
 }

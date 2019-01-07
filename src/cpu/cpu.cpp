@@ -24,7 +24,7 @@ namespace {
 }
 
 namespace cpu {
-	mips::mips(data_bus& b) : bus{&b} { reset(); }
+	mips::mips(bus::data_bus& b) : bus{&b} { reset(); }
 
 	void mips::reset() {
 		regs.fill(0);

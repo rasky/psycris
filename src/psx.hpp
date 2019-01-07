@@ -1,7 +1,7 @@
 #pragma once
-#include "cpu/bus.hpp"
 #include "cpu/cpu.hpp"
 
+#include "hw/bus.hpp"
 #include "hw/interrupt_control.hpp"
 #include "hw/ram.hpp"
 
@@ -36,7 +36,7 @@ namespace psycris {
 		std::vector<uint8_t> _board_memory;
 
 	  private:
-		cpu::data_bus _bus;
+		bus::data_bus _bus;
 
 	  public:
 		cpu::mips cpu;
