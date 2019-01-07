@@ -4,7 +4,7 @@ add_library(psycris_emu STATIC
     cpu/cop0.cpp
     cpu/disassembly.cpp
     hw/bus.cpp
-    hw/interrupt_control.cpp
+    hw/devices/interrupt_control.cpp
 )
 
 target_compile_features(psycris_emu PUBLIC cxx_std_17)

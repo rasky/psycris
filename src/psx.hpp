@@ -2,8 +2,8 @@
 #include "cpu/cpu.hpp"
 
 #include "hw/bus.hpp"
-#include "hw/interrupt_control.hpp"
-#include "hw/ram.hpp"
+#include "hw/devices/interrupt_control.hpp"
+#include "hw/devices/ram.hpp"
 
 #include "meta.hpp"
 #include <iosfwd>
