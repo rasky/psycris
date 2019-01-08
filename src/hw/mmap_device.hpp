@@ -100,6 +100,11 @@ namespace psycris::hw {
 			return val;
 		}
 
+		template <typename DataPort>
+		void write(typename DataPort::int_type val) {
+			std::memcpy(_memory.data() + DataPort::offset, &val, DataPort::size);
+		}
+
 	  private:
 		template <typename... DataPorts>
 		void initialize_ports() {
