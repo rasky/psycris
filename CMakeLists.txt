@@ -17,4 +17,6 @@ endfunction()
 add_compile_options(-fsanitize=undefined)
 add_linker_flag_all_variants(-fsanitize=undefined)
 
+enable_testing()
+
 add_subdirectory(src)
