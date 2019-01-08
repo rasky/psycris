@@ -9,6 +9,8 @@ namespace cpu {
 namespace psycris::hw {
 	class interrupt_control : public mmap_device<interrupt_control, 8> {
 	  public:
+		static constexpr char const* device_name = "Interrupt Control";
+
 		interrupt_control(gsl::span<uint8_t, size> buffer, cpu::cop0& cop);
 
 	  public:

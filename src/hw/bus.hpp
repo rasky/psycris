@@ -79,6 +79,13 @@ namespace psycris::bus {
 
 	  public:
 		/**
+		 * \brief The device name (for debug purpose)
+		 *
+		 * \return char const*
+		 */
+		virtual char const* name() const = 0;
+
+		/**
 		 * \brief returns the device memory
 		 */
 		virtual gsl::span<uint8_t> memory() const = 0;

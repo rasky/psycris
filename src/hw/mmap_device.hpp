@@ -73,7 +73,21 @@ namespace psycris::hw {
 			}
 		}
 
+	  private:
+		template <typename, typename = void>
+		struct has_device_name : std::false_type {};
+
+		template <typename T>
+		struct has_device_name<T, std::void_t<decltype(T::device_name)>> : std::true_type {};
+
 	  public:
+		char const* name() const override {
+			if constexpr (has_device_name<Derived>::value) {
+				return Derived::device_name;
+			}
+			return "unknown device";
+		}
+
 		gsl::span<uint8_t> memory() const override { return _memory; }
 
 		std::vector<bus::data_port const*> const& ports() override { return _ports_ptrs; }
