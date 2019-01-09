@@ -2,6 +2,7 @@
 #include "cpu/cpu.hpp"
 
 #include "hw/bus.hpp"
+#include "hw/devices/dma.hpp"
 #include "hw/devices/interrupt_control.hpp"
 #include "hw/devices/ram.hpp"
 
@@ -19,7 +20,7 @@ namespace psycris {
 			 */
 			constexpr static uint16_t rev = 0x1;
 
-			using layout = std::tuple<hw::ram, hw::rom, hw::interrupt_control>;
+			using layout = std::tuple<hw::ram, hw::rom, hw::interrupt_control, hw::dma>;
 
 			constexpr static size_t memory_size() {
 				return boost::hana::fold_left(to_type_t<layout>, 0, [](int state, auto p) {
@@ -63,6 +64,7 @@ namespace psycris {
 		hw::ram ram;
 		hw::rom rom;
 		hw::interrupt_control interrupt_control;
+		hw::dma dma;
 
 		friend void dump_board(std::ostream&, psx const&);
 		friend void restore_board(std::istream&, psx&);

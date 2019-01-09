@@ -54,7 +54,8 @@ namespace psycris {
 	      cpu(_bus),
 	      ram(v<0>(_board_memory)),
 	      rom(v<1>(_board_memory)),
-	      interrupt_control(v<2>(_board_memory), cpu.cop0) {
+	      interrupt_control(v<2>(_board_memory), cpu.cop0),
+	      dma(v<3>(_board_memory), interrupt_control) {
 
 		_bus.connect({0x1fc0'0000, 0x1fc8'0000}, rom);
 		_bus.connect({0x9fc0'0000, 0x9fc8'0000}, rom);
@@ -65,6 +66,8 @@ namespace psycris {
 		_bus.connect({0xa000'0000, 0xa020'0000}, ram);
 
 		_bus.connect({0x1f80'1070, 0x1f80'1078}, interrupt_control);
+
+		_bus.connect(0x1f80'10f0, dma);
 	}
 }
 

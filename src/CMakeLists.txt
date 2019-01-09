@@ -4,6 +4,7 @@ add_library(psycris_emu STATIC
     cpu/cop0.cpp
     cpu/disassembly.cpp
     hw/bus.cpp
+    hw/devices/dma.cpp
     hw/devices/interrupt_control.cpp
 )
 
