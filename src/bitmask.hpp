@@ -25,6 +25,11 @@ namespace psycris {
 			return v;
 		}
 
+		constexpr masked_proxy& operator&=(uint32_t v) {
+			value = value & ((v << offset) | ~mask);
+			return *this;
+		}
+
 		constexpr uint32_t operator<<=(uint8_t b) { return *this = static_cast<uint32_t>(*this) << b; }
 		constexpr uint32_t operator>>=(uint8_t b) { return *this = static_cast<uint32_t>(*this) >> b; }
 

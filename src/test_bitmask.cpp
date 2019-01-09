@@ -38,5 +38,15 @@ TEST_CASE("a bitmask makes it easier to work with a bitset", "[core]") {
 				REQUIRE(value == 0xffff'ff9f);
 			}
 		}
+
+		SECTION("performing a bitand") {
+			flag3(value) = 0x1e;
+
+			SECTION("with the assignment operator") {
+				flag3(value) &= 0x11;
+				REQUIRE(flag3(value) == 0x10);
+				REQUIRE(value == 0xffff'ffc3);
+			}
+		}
 	}
 }
