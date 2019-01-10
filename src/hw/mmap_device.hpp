@@ -5,11 +5,11 @@
 
 namespace psycris::hw {
 
-	template <uint8_t Offset, uint8_t Bytes = 4>
+	template <uint32_t Offset, uint8_t Bytes = 4>
 	struct data_reg {
 		static_assert(Bytes == 1 || Bytes == 2 || Bytes == 4, "Unsupported port size");
 
-		static constexpr uint8_t offset = Offset;
+		static constexpr uint32_t offset = Offset;
 		static constexpr uint8_t size = Bytes;
 
 		using int_type = std::conditional_t<Bytes == 4, uint32_t, std::conditional_t<Bytes == 2, uint16_t, uint8_t>>;
@@ -17,7 +17,7 @@ namespace psycris::hw {
 
 	namespace details {
 		constexpr auto ports_overlaps = [](auto ports) -> bool {
-			int last_offset = 0;
+			uint32_t last_offset = 0;
 			bool overlaps = false;
 			hana::for_each(ports, [&](auto port) {
 				using T = typename decltype(port)::type;

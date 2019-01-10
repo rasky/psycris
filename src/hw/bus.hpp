@@ -43,12 +43,12 @@ namespace psycris::bus {
 
 	class data_port {
 	  public:
-		data_port(uint8_t offset, uint8_t size) : _offset{offset}, _size{size} {}
+		data_port(uint32_t offset, uint8_t size) : _offset{offset}, _size{size} {}
 
 		virtual ~data_port() = default;
 
 	  public:
-		uint8_t offset() const { return _offset; }
+		uint32_t offset() const { return _offset; }
 		uint8_t size() const { return _size; }
 
 	  public:
@@ -69,7 +69,7 @@ namespace psycris::bus {
 		virtual void post_write(uint32_t new_value, uint32_t old_value) const = 0;
 
 	  private:
-		uint8_t _offset;
+		uint32_t _offset;
 		uint8_t _size;
 	};
 
