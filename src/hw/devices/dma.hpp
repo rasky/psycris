@@ -1,6 +1,5 @@
 #pragma once
 #include "../../bitmask.hpp"
-#include "../bus.hpp"
 #include "../mmap_device.hpp"
 
 namespace psycris::hw {
@@ -51,7 +50,7 @@ namespace psycris::hw {
 
 		friend mmap_device;
 
-		void wcb(dicr, uint32_t new_value, uint32_t old_value);
+		void wcb(dicr, uint32_t, uint32_t);
 
 	  private:
 		interrupt_control* ic;

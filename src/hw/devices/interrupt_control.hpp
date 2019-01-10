@@ -1,5 +1,4 @@
 #pragma once
-#include "../bus.hpp"
 #include "../mmap_device.hpp"
 
 namespace cpu {
