@@ -6,6 +6,7 @@ add_library(psycris_emu STATIC
     hw/bus.cpp
     hw/devices/dma.cpp
     hw/devices/interrupt_control.cpp
+    hw/devices/spu.cpp
 )
 
 target_compile_features(psycris_emu PUBLIC cxx_std_17)
