@@ -69,7 +69,7 @@ namespace psycris {
 		_bus.connect({0x1f80'1070, 0x1f80'1078}, interrupt_control);
 
 		_bus.connect(0x1f80'10f0, dma);
-		_bus.connect(0x1f80'1daa, spu);
+		_bus.connect(0x1f80'1c00, spu);
 	}
 }
 
