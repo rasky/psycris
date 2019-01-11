@@ -3,44 +3,55 @@
 #include <stdexcept>
 
 namespace psycris {
-	struct masked_value {
-		constexpr operator uint32_t() const { return value; }
+	template <typename ValueType>
+	class masked_value {
+	  public:
+		masked_value(ValueType v) : value{v} {}
+
+		constexpr operator ValueType() const { return value; }
 
 		template <typename T>
-		constexpr uint32_t operator=(T) {
+		constexpr ValueType operator=(T) {
 			static_assert(sizeof(T) < 0, "this masked value is read-only");
 			return 0;
 		}
 
-		uint32_t value;
+	  private:
+		ValueType value;
 	};
 
-	struct masked_proxy {
-		constexpr masked_proxy(uint32_t& v, uint32_t m, uint8_t o) : value{v}, mask{m}, offset{o} {}
+	template <typename ValueType>
+	class masked_proxy {
+	  public:
+		constexpr masked_proxy(ValueType& v, ValueType m, uint8_t o) : value{v}, mask{m}, offset{o} {}
 
-		constexpr operator uint32_t() const { return (value & mask) >> offset; }
+	  public:
+		constexpr operator ValueType() const { return (value & mask) >> offset; }
 
-		constexpr uint32_t operator=(uint32_t v) {
+		constexpr ValueType operator=(ValueType v) {
 			value = (value & ~mask) | ((v << offset) & mask);
 			return v;
 		}
 
-		constexpr masked_proxy& operator&=(uint32_t v) {
+		constexpr masked_proxy& operator&=(ValueType v) {
 			value = value & ((v << offset) | ~mask);
 			return *this;
 		}
 
-		constexpr uint32_t operator<<=(uint8_t b) { return *this = static_cast<uint32_t>(*this) << b; }
-		constexpr uint32_t operator>>=(uint8_t b) { return *this = static_cast<uint32_t>(*this) >> b; }
+		constexpr ValueType operator<<=(uint8_t b) { return *this = static_cast<ValueType>(*this) << b; }
+		constexpr ValueType operator>>=(uint8_t b) { return *this = static_cast<ValueType>(*this) >> b; }
 
-		uint32_t& value;
-		uint32_t mask;
+	  private:
+		ValueType& value;
+		ValueType mask;
 		uint8_t offset;
 	};
 
-	template <typename Tag>
+	template <typename Tag, typename ValueType = uint32_t>
 	struct bit_mask {
-		constexpr bit_mask(uint32_t m) : mask{m}, offset{0} {
+		static_assert(std::is_unsigned_v<ValueType>, "The bitmask type must be unsigned");
+
+		constexpr bit_mask(ValueType m) : mask{m}, offset{0} {
 			if (m == 0) {
 				throw std::runtime_error("a bit_mask cannot be empty");
 			}
@@ -59,11 +70,13 @@ namespace psycris {
 			}
 		}
 
-		constexpr masked_value operator()(uint32_t const& v) const { return {(v & mask) >> offset}; }
+		constexpr masked_value<ValueType> operator()(ValueType const& v) const {
+			return masked_value<ValueType>((v & mask) >> offset);
+		}
 
-		constexpr masked_proxy operator()(uint32_t& v) const { return {v, mask, offset}; }
+		constexpr masked_proxy<ValueType> operator()(ValueType& v) const { return {v, mask, offset}; }
 
-		uint32_t mask;
+		ValueType mask;
 		uint8_t offset;
 	};
 }
