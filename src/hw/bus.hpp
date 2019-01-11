@@ -251,9 +251,11 @@ namespace psycris::bus {
 				device_offset = next_port_offset;
 			}
 
-			// if (written_bytes > 0) {
-			// 	assert(!"TODO implement a multi-device write");
-			// }
+			if (map.d->ports().size() > 0 && written_bytes > 0) {
+				assert(!"TODO implement a multi-device write");
+				psycris::log->warn(
+				    "write {:x} to {} - {} {:0>8x}", read<T>(map, addr), map.d->name(), guess_io_port(addr), addr);
+			}
 		}
 
 	  private:
