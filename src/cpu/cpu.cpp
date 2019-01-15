@@ -107,6 +107,18 @@ namespace cpu {
 				case 0x13: // MTLO -- Move To Lo
 					lo() = rs();
 					break;
+				case 0x18: { // MULT -- Multiply Word
+					int64_t r = static_cast<int32_t>(rs()) * static_cast<int32_t>(rt());
+					lo() = r & 0x0000'0000'ffff'ffff;
+					hi() = r & 0xffff'ffff'0000'0000;
+					break;
+				}
+				case 0x19: { // MULTU -- Multiply Unsigned Word
+					uint64_t r = rs() * rt();
+					lo() = r & 0x0000'0000'ffff'ffff;
+					hi() = r & 0xffff'ffff'0000'0000;
+					break;
+				}
 				case 0x1a: { // DIV -- Divide Word
 					auto r = std::div(static_cast<int32_t>(rs()), static_cast<int32_t>(rt()));
 					lo() = r.quot;
@@ -128,6 +140,9 @@ namespace cpu {
 					break;
 				case 0x24: // AND -- And
 					rd() = rs() & rt();
+					break;
+				case 0x27: // NOR -- Nor
+					rd() = ~(rs() | rt());
 					break;
 				case 0x2a: // SLT -- Set On Less Than
 					rd() = static_cast<int32_t>(rs()) < static_cast<int32_t>(rt()) ? 1 : 0;
@@ -223,6 +238,9 @@ namespace cpu {
 				break;
 			case 0x20: // LB -- Load byte
 				rt() = sx(read<uint8_t>(rs() + ins.imm()), 8);
+				break;
+			case 0x21: // LH -- Load Halfword
+				rt() = sx(read<uint16_t>(rs() + ins.imm()), 16);
 				break;
 			case 0x23: // LW -- Load word
 				rt() = read<uint32_t>(rs() + ins.imm());
