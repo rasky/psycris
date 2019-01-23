@@ -56,7 +56,8 @@ namespace psycris {
 	      rom(v<1>(_board_memory)),
 	      interrupt_control(v<2>(_board_memory), cpu.cop0),
 	      dma(v<3>(_board_memory), interrupt_control),
-	      spu(v<4>(_board_memory)) {
+	      spu(v<4>(_board_memory)),
+	      gpu_controller(v<5>(_board_memory)) {
 
 		_bus.connect({0x1fc0'0000, 0x1fc8'0000}, rom);
 		_bus.connect({0x9fc0'0000, 0x9fc8'0000}, rom);
@@ -70,6 +71,8 @@ namespace psycris {
 
 		_bus.connect(0x1f80'10f0, dma);
 		_bus.connect(0x1f80'1c00, spu);
+
+		_bus.connect(0x1f80'1810, gpu_controller);
 	}
 }
 

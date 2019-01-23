@@ -3,6 +3,8 @@ add_library(psycris_emu STATIC
     cpu/cpu.cpp
     cpu/cop0.cpp
     cpu/disassembly.cpp
+    gpu/gpu.cpp
+    gpu/disassembly.cpp
     hw/bus.cpp
     hw/devices/dma.cpp
     hw/devices/interrupt_control.cpp
