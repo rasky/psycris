@@ -50,7 +50,7 @@ namespace cpu {
 	void mips::run(uint64_t until) {
 		using psycris::log;
 
-		reg_tracer rtracer;
+		// reg_tracer rtracer;
 
 		while (clock++ < until) {
 			// prefecth the next instruction
@@ -60,7 +60,8 @@ namespace cpu {
 			// current instruction along with the location where we fetched it,
 			// but for the cpu the PC of the current instruction is pointing to
 			// the next instruction (the delay slot).
-			log->trace("{:0>8x}@{}: {}", pc, clock, disassembly(ins, pc));
+
+			// log->trace("{:0>8x}@{}: {}", pc, clock, disassembly(ins, pc));
 			// pc now points to the delay slot
 			pc = npc;
 			// npc to the instruction after the delay slot
@@ -274,7 +275,7 @@ namespace cpu {
 				unimplemented(pc, clock, ins);
 			}
 
-			rtracer.trace(regs);
+			// rtracer.trace(regs);
 
 			ins = next_ins;
 		}
