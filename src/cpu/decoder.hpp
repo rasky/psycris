@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace cpu {
+namespace psycris::cpu {
 	/**
 	 * \brief sign extend the first `bits` of v
 	 */

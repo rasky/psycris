@@ -3,7 +3,7 @@
 
 #include <array>
 
-namespace cpu {
+namespace psycris::cpu {
 	namespace cause_bits {
 		using mask = psycris::bit_mask<class cause_bits_>;
 

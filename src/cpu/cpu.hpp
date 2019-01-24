@@ -9,7 +9,7 @@
 
 namespace bus = psycris::bus;
 
-namespace cpu {
+namespace psycris::cpu {
 	class mips {
 	  public:
 		static const uint32_t exc_vector = 0x8000'0080;

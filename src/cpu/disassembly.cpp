@@ -85,20 +85,20 @@ namespace {
 	}
 
 	std::string unknown(uint32_t ins) {
-		cpu::decoder d{ins};
+		psycris::cpu::decoder d{ins};
 		return fmt::format("{:0>8x} [{:0>32b}] opcode={:0>#2x} funct={:0>#2x}", ins, ins, d.opcode(), d.funct());
 	}
 
-	struct decoder : cpu::decoder {
-		reg rs() const { return reg{cpu::decoder::rs()}; }
+	struct dis_decoder : psycris::cpu::decoder {
+		reg rs() const { return reg{decoder::rs()}; }
 
-		reg rt() const { return reg{cpu::decoder::rt()}; }
+		reg rt() const { return reg{decoder::rt()}; }
 
-		reg rd() const { return reg{cpu::decoder::rd()}; }
+		reg rd() const { return reg{decoder::rd()}; }
 
-		i5 shamt() const { return i5{cpu::decoder::shamt()}; }
+		i5 shamt() const { return i5{decoder::shamt()}; }
 
-		i16 uimm() const { return cpu::decoder::uimm(); }
+		i16 uimm() const { return decoder::uimm(); }
 	};
 }
 
@@ -156,7 +156,7 @@ namespace {
     };
 	// clang-format on
 
-	std::string integer_unit(::decoder dec, uint32_t pc) {
+	std::string integer_unit(dis_decoder dec, uint32_t pc) {
 		std::string fmt;
 		{
 			auto r = iu_ins.find(dec.opcode());
@@ -206,10 +206,10 @@ namespace {
 		                   "imm5"_a = dec.shamt(),
 		                   "imm16"_a = dec.uimm(),
 		                   "target"_a = i32((pc & 0xf000'0000) | (dec.target() << 2)),
-		                   "j_rel"_a = i32(pc + 4 + cpu::sx(dec.uimm() << 2, 16)));
+		                   "j_rel"_a = i32(pc + 4 + psycris::cpu::sx(dec.uimm() << 2, 16)));
 	}
 
-	std::string coprocessor(::decoder dec) {
+	std::string coprocessor(dis_decoder dec) {
 		std::string fmt = "";
 		if (!dec.is_cop()) {
 			return fmt;
@@ -240,9 +240,9 @@ namespace {
 	}
 }
 
-namespace cpu {
+namespace psycris::cpu {
 	std::string disassembly(uint32_t ins, uint32_t pc) {
-		::decoder dec{ins};
+		dis_decoder dec{{ins}};
 
 		std::string s = integer_unit(dec, pc);
 		if (s == "") {
@@ -255,7 +255,7 @@ namespace cpu {
 	}
 }
 
-namespace cpu {
+namespace psycris::cpu {
 	void reg_tracer::trace(std::array<uint32_t, 32> const& regs) {
 		using psycris::log;
 

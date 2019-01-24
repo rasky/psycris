@@ -1,7 +1,7 @@
 #pragma once
 #include "../mmap_device.hpp"
 
-namespace cpu {
+namespace psycris::cpu {
 	class cop0;
 }
 

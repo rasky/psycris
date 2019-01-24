@@ -6,7 +6,9 @@
 #include <cstdlib>
 
 namespace {
-	void unimplemented(uint32_t pc, uint64_t clock, cpu::decoder ins) {
+	using psycris::cpu::decoder;
+
+	void unimplemented(uint32_t pc, uint64_t clock, decoder ins) {
 		psycris::log->critical("[CPU] unimplemented instruction pc={:0>8x} clock={} opcode={:0>#2x} funct={:0>#2x}",
 		                       pc,
 		                       clock,
@@ -23,7 +25,7 @@ namespace {
 	// clang-format on
 }
 
-namespace cpu {
+namespace psycris::cpu {
 	mips::mips(bus::data_bus& b) : bus{&b} { reset(); }
 
 	void mips::reset() {
