@@ -5,19 +5,19 @@ namespace psycris::cpu {
 }
 
 namespace psycris::gpu {
-	class gpu;
+	class cxd;
 }
 
 namespace psycris {
 	class scheduler {
 	  public:
-		scheduler(cpu::mips&, gpu::gpu&);
+		scheduler(cpu::mips&, gpu::cxd&);
 
 	  public:
 		void run();
 
 	  private:
 		cpu::mips* _cpu;
-		gpu::gpu* _gpu;
+		gpu::cxd* _gpu;
 	};
 }

@@ -1,5 +1,5 @@
 #include "interrupt_control.hpp"
-#include "../../cpu/cop0.hpp"
+#include "../cpu/cop0.hpp"
 
 namespace psycris::hw {
 	interrupt_control::interrupt_control(gsl::span<uint8_t, size> buffer, cpu::cop0& cop)

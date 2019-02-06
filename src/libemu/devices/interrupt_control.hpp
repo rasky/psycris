@@ -1,5 +1,5 @@
 #pragma once
-#include "../mmap_device.hpp"
+#include "mmap_device.hpp"
 
 namespace psycris::cpu {
 	class cop0;

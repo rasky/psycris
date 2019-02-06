@@ -1,15 +1,15 @@
 #pragma once
-#include "../hw/mmap_device.hpp"
+#include "../devices/mmap_device.hpp"
 
 namespace psycris::gpu {
 	using hw::data_reg;
 	using hw::mmap_device;
 
-	class gpu_controller : public mmap_device<gpu_controller, 8> {
+	class controller : public mmap_device<controller, 8> {
 	  public:
 		static constexpr char const* device_name = "GPU controller";
 
-		gpu_controller(gsl::span<uint8_t, size> buffer);
+		controller(gsl::span<uint8_t, size> buffer);
 
 	  private:
 		using gp0 = data_reg<0, 4>;
@@ -21,9 +21,11 @@ namespace psycris::gpu {
 		void wcb(gp1, uint32_t, uint32_t);
 	};
 
-	class gpu : public mmap_device<gpu, 4> {
+	class cxd : public mmap_device<cxd, 4> {
 	  public:
-		gpu(gsl::span<uint8_t, size> buffer);
+		static constexpr char const* device_name = "GPU CXD???";
+
+		cxd(gsl::span<uint8_t, size> buffer);
 
 	  public:
 		void run(uint64_t until);

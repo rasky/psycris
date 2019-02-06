@@ -1,6 +1,6 @@
 #pragma once
+#include "../bus/bus.hpp"
 #include "../meta.hpp"
-#include "./bus.hpp"
 #include <cstdint>
 
 namespace psycris::hw {
@@ -40,7 +40,7 @@ namespace psycris::hw {
 		 * method of this specific class calls the `wcb()` method in the
 		 * `Derived` one that accepts an instance of this type as the first
 		 * argument. The `Derived` class is not required to define a method for
-		 * every `DataPort`.s
+		 * every `DataPort`s
 		 */
 		template <typename DataPort>
 		struct mmap_data_port : public bus::data_port {

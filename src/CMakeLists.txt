@@ -1,15 +1,16 @@
 add_library(psycris_emu STATIC
-    logging.cpp
-    scheduler.cpp
-    cpu/cpu.cpp
-    cpu/cop0.cpp
-    cpu/disassembly.cpp
-    gpu/gpu.cpp
-    gpu/disassembly.cpp
-    hw/bus.cpp
-    hw/devices/dma.cpp
-    hw/devices/interrupt_control.cpp
-    hw/devices/spu.cpp
+    libemu/logging.cpp
+    libemu/scheduler.cpp
+    libemu/cpu/cpu.cpp
+    libemu/cpu/cop0.cpp
+    libemu/cpu/disassembly.cpp
+    libemu/gpu/gpu.cpp
+    libemu/gpu/disassembly.cpp
+    libemu/bus/bus.cpp
+    libemu/devices/dma.cpp
+    libemu/devices/interrupt_control.cpp
+    libemu/devices/spu.cpp
+    libemu/psx.cpp
 )
 
 target_compile_features(psycris_emu PUBLIC cxx_std_17)
@@ -23,21 +24,20 @@ target_link_libraries(psycris_emu
 )
 
 add_executable(psycris
-    main.cpp
-    config.cpp
-    loader.cpp
-    psx.cpp
+    psycris/main.cpp
+    psycris/config.cpp
+    psycris/loader.cpp
 )
 
 target_compile_options(psycris PRIVATE -Wall -Wextra)
 target_link_libraries(psycris psycris_emu CONAN_PKG::cli11)
 
-add_executable(tests
-    test_runner.cpp
-    test_bus.cpp
-    test_bitmask.cpp
+add_executable(psycris_emu_tests
+    libemu/tests/test_runner.cpp
+    libemu/tests/test_bus.cpp
+    libemu/tests/test_bitmask.cpp
 )
-target_compile_options(tests PRIVATE -Wall -Wextra)
-target_link_libraries(tests psycris_emu CONAN_PKG::catch2)
+target_compile_options(psycris_emu_tests PRIVATE -Wall -Wextra)
+target_link_libraries(psycris_emu_tests psycris_emu CONAN_PKG::catch2)
 
 add_test(tests tests)

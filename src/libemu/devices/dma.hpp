@@ -1,6 +1,6 @@
 #pragma once
-#include "../../bitmask.hpp"
-#include "../mmap_device.hpp"
+#include "../bitmask.hpp"
+#include "mmap_device.hpp"
 
 namespace psycris::hw {
 	class interrupt_control;

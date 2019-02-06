@@ -1,6 +1,6 @@
 #pragma once
-#include "../bus.hpp"
-#include "../mmap_device.hpp"
+#include "../bus/bus.hpp"
+#include "mmap_device.hpp"
 
 namespace psycris::hw {
 	class ram : public mmap_device<ram, 2 * 1024 * 1024> {

@@ -3,7 +3,7 @@
 #include "gpu/gpu.hpp"
 
 namespace psycris {
-	scheduler::scheduler(cpu::mips& c, gpu::gpu& g) : _cpu{&c}, _gpu{&g} {}
+	scheduler::scheduler(cpu::mips& c, gpu::cxd& g) : _cpu{&c}, _gpu{&g} {}
 
 	void scheduler::run() {
 		uint64_t gpu_target = _gpu->ticks();

@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "hw/bus.hpp"
-#include "hw/mmap_device.hpp"
+#include "../bus/bus.hpp"
+#include "../devices/mmap_device.hpp"
 
 namespace {
 	namespace hw = psycris::hw;

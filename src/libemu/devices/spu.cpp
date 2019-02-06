@@ -1,6 +1,6 @@
 #include "spu.hpp"
-#include "../../bitmask.hpp"
-#include "../../logging.hpp"
+#include "../bitmask.hpp"
+#include "../logging.hpp"
 
 namespace {
 	using psycris::hw::data_reg;

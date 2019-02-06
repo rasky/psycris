@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "bitmask.hpp"
+#include "../bitmask.hpp"
 
 namespace {
 	using mask = psycris::bit_mask<class test_>;

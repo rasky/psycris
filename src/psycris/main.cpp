@@ -1,10 +1,9 @@
 #include "config.hpp"
-#include "cpu/cpu.hpp"
 #include "loader.hpp"
-#include "logging.hpp"
 
-#include "psx.hpp"
-#include "scheduler.hpp"
+#include "../libemu/logging.hpp"
+#include "../libemu/psx.hpp"
+#include "../libemu/scheduler.hpp"
 
 #include <cstdlib>
 #include <fstream>

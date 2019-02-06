@@ -1,6 +1,7 @@
 #define CATCH_CONFIG_RUNNER
-#include "logging.hpp"
 #include <catch2/catch.hpp>
+
+#include "../logging.hpp"
 
 int main(int argc, char* argv[]) {
 	psycris::init_logging(false);

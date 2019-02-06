@@ -1,5 +1,5 @@
 #pragma once
-#include "../mmap_device.hpp"
+#include "mmap_device.hpp"
 
 namespace psycris::hw {
 	class spu : public mmap_device<spu, 512> {

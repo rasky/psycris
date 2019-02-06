@@ -1,5 +1,5 @@
 #include "loader.hpp"
-#include "logging.hpp"
+#include "../libemu/logging.hpp"
 #include <algorithm>
 #include <cstdlib>
 
@@ -36,13 +36,9 @@ namespace {
 
 		uint8_t ascii_marker[56];
 
-		std::string_view id() const {
-			return {reinterpret_cast<const char*>(&ascii_id), 8};
-		}
+		std::string_view id() const { return {reinterpret_cast<const char*>(&ascii_id), 8}; }
 
-		std::string_view marker() const {
-			return {reinterpret_cast<const char*>(&ascii_marker), sizeof(ascii_marker)};
-		}
+		std::string_view marker() const { return {reinterpret_cast<const char*>(&ascii_marker), sizeof(ascii_marker)}; }
 	};
 
 	// A minimal bios used to start an exe

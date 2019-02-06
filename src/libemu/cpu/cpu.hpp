@@ -1,5 +1,5 @@
 #pragma once
-#include "../hw/bus.hpp"
+#include "../bus/bus.hpp"
 #include "cop0.hpp"
 #include "decoder.hpp"
 
