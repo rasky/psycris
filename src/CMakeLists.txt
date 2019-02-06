@@ -1,5 +1,6 @@
 add_library(psycris_emu STATIC
     logging.cpp
+    scheduler.cpp
     cpu/cpu.cpp
     cpu/cop0.cpp
     cpu/disassembly.cpp

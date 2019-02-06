@@ -2,7 +2,9 @@
 #include "cpu/cpu.hpp"
 #include "loader.hpp"
 #include "logging.hpp"
+
 #include "psx.hpp"
+#include "scheduler.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -52,6 +54,8 @@ int main(int argc, char* argv[]) {
 		psycris::restore_board(f, board);
 	}
 
-	board.cpu.run(cfg.ticks);
-	fmt::print("run out of ticks\n");
+	psycris::scheduler sc(board.cpu, board.gpu);
+	sc.run();
+	// board.cpu.run(cfg.ticks);
+	// fmt::print("run out of ticks\n");
 }

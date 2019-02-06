@@ -20,4 +20,19 @@ namespace psycris::gpu {
 		void wcb(gp0, uint32_t, uint32_t);
 		void wcb(gp1, uint32_t, uint32_t);
 	};
+
+	class gpu : public mmap_device<gpu, 4> {
+	  public:
+		gpu(gsl::span<uint8_t, size> buffer);
+
+	  public:
+		void run(uint64_t until);
+
+		uint64_t ticks() const;
+
+	  private:
+		friend mmap_device;
+
+		void wcb(class XXX);
+	};
 }
