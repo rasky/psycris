@@ -225,7 +225,7 @@ namespace psycris::hw {
 		uint16_t w = 0;
 		spu_mode(w) = spu_mode(new_value);
 		write<spustat>(w);
-		log->info("copying {:x} {:x}", new_value, w);
+		// log->info("copying {:x} {:x}", new_value, w);
 	}
 	void spu::wcb(spustat, uint32_t, uint32_t) { log->warn("SPUSTAT should be R/O"); }
 }

@@ -133,7 +133,10 @@ namespace psycris::bus {
 		 * The device is mapped to the specified address range. The same device
 		 * can be mapped multiple times to different ranges.
 		 */
-		void connect(address_range r, device& dp) { devices.push_back({r, &dp}); }
+		void connect(address_range r, device& dp) {
+			psycris::log->info("connecting {} {:0>8x}-{:0>8x}", dp.name(), r.start, r.end);
+			devices.push_back({r, &dp});
+		}
 
 		void connect(uint32_t start, device& dp) {
 			connect({start, gsl::narrow_cast<uint32_t>(start + dp.memory_size())}, dp);
@@ -153,7 +156,7 @@ namespace psycris::bus {
 			}
 
 			std::string n = device->d->name();
-			if (n != "RAM" && n != "ROM") {
+			if (n != "RAM" && n != "ROM" && n != "SPU") {
 				psycris::log->info("reading from {} {:0>8x} ({})", n, addr, guess_io_port(addr));
 			}
 			return read<T>(*device, addr);
@@ -176,6 +179,11 @@ namespace psycris::bus {
 
 			T prev_value = read<T>(*device, addr);
 			write(*device, addr, val);
+
+			std::string n = device->d->name();
+			if (n != "RAM" && n != "ROM" && n != "SPU") {
+				psycris::log->info("writing {:x} to {} - {} {:0>8x}", val, n, guess_io_port(addr), addr);
+			}
 			touch_data_ports<T>(*device, addr, prev_value);
 		}
 
@@ -254,12 +262,6 @@ namespace psycris::bus {
 
 				over += port_bytes;
 				device_offset = next_port_offset;
-			}
-
-			if (map.d->ports().size() > 0 && written_bytes > 0) {
-				assert(!"TODO implement a multi-device write");
-				psycris::log->warn(
-				    "write {:x} to {} - {} {:0>8x}", read<T>(map, addr), map.d->name(), guess_io_port(addr), addr);
 			}
 		}
 
