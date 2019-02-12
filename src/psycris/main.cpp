@@ -9,20 +9,19 @@
 #include <fstream>
 
 namespace {
-	psycris::psx board;
 
 	void dump_on_exit() {
-		using psycris::log;
+		// using psycris::log;
 
-		std::string filename = fmt::format("dump@{}", board.cpu.ticks());
-		log->info("saving the board dump on {}", filename);
+		// std::string filename = fmt::format("dump@{}", board.cpu.ticks());
+		// log->info("saving the board dump on {}", filename);
 
-		std::ofstream dump_file(filename, std::ios::binary | std::ios_base::out | std::ios_base::trunc);
-		if (!dump_file) {
-			log->critical("cannot open the dump file for writing");
-		}
+		// std::ofstream dump_file(filename, std::ios::binary | std::ios_base::out | std::ios_base::trunc);
+		// if (!dump_file) {
+		// 	log->critical("cannot open the dump file for writing");
+		// }
 
-		psycris::dump_board(dump_file, board);
+		// psycris::dump_board(dump_file, board);
 	}
 }
 
@@ -32,6 +31,8 @@ int main(int argc, char* argv[]) {
 
 	using psycris::log;
 	psycris::init_logging(cfg.verbose);
+
+	psycris::psx board;
 
 	log->info("PSX board. Total memory={}", psycris::psx::board::memory_size());
 	if (cfg.dump_on_exit) {

@@ -23,8 +23,7 @@ namespace psycris {
 			 */
 			constexpr static uint16_t rev = 0x1;
 
-			using layout =
-			    std::tuple<hw::ram, hw::rom, hw::interrupt_control, hw::dma, hw::spu, gpu::controller, gpu::cxd>;
+			using layout = std::tuple<hw::ram, hw::rom, hw::interrupt_control, hw::dma, hw::spu, gpu::controller>;
 
 			constexpr static size_t memory_size() {
 				return boost::hana::fold_left(to_type_t<layout>, 0, [](int state, auto p) {
@@ -71,8 +70,8 @@ namespace psycris {
 		hw::dma dma;
 		hw::spu spu;
 
-		gpu::controller gpu_controller;
 		gpu::cxd gpu;
+		// gpu::controller gpu_controller;
 
 		friend void dump_board(std::ostream&, psx const&);
 		friend void restore_board(std::istream&, psx&);

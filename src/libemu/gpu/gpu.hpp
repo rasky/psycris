@@ -1,15 +1,23 @@
 #pragma once
 #include "../devices/mmap_device.hpp"
+#include "../fixed_fifo.hpp"
+#include "decoder.hpp"
+
+#include <optional>
 
 namespace psycris::gpu {
 	using hw::data_reg;
 	using hw::mmap_device;
+	using hw::rw_buffers;
 
-	class controller : public mmap_device<controller, 8> {
+	class cxd;
+
+	class controller : public mmap_device<controller, 8, rw_buffers::distinct> {
 	  public:
 		static constexpr char const* device_name = "GPU controller";
 
-		controller(gsl::span<uint8_t, size> buffer);
+	  private:
+		controller(gsl::span<uint8_t, addressable_size> r, gsl::span<uint8_t, addressable_size> w, cxd& gpu);
 
 	  private:
 		using gp0 = data_reg<0, 4>;
@@ -19,22 +27,44 @@ namespace psycris::gpu {
 
 		void wcb(gp0, uint32_t, uint32_t);
 		void wcb(gp1, uint32_t, uint32_t);
+
+	  private:
+		friend cxd;
+
+		cxd* gpu;
 	};
 
-	class cxd : public mmap_device<cxd, 4> {
+	class cxd {
 	  public:
 		static constexpr char const* device_name = "GPU CXD???";
 
-		cxd(gsl::span<uint8_t, size> buffer);
+		static cxd build(gsl::span<uint8_t, controller::size> buffer);
+
+	  private:
+		cxd();
 
 	  public:
+		controller& ctrl_device() const;
+
 		void run(uint64_t until);
 
 		uint64_t ticks() const;
 
-	  private:
-		friend mmap_device;
+	  public:
+		bool push_gp0(uint32_t);
 
-		void wcb(class XXX);
+		bool push_gp1(uint32_t);
+
+	  private:
+		std::optional<decoder> pop_gp0();
+		std::optional<decoder> pop_gp1();
+
+	  private:
+		std::unique_ptr<controller> ctrl;
+
+		uint64_t clock;
+
+		fixed_fifo<uint32_t, 16> gp0_commands;
+		fixed_fifo<uint32_t, 16> gp1_commands;
 	};
 }
