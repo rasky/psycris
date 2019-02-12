@@ -88,7 +88,9 @@ namespace psycris::bus {
 		/**
 		 * \brief returns the device memory
 		 */
-		virtual gsl::span<uint8_t> memory() const = 0;
+		virtual gsl::span<uint8_t> readable_memory() const = 0;
+		virtual gsl::span<uint8_t> writable_memory() const = 0;
+		virtual size_t memory_size() const = 0;
 
 		/**
 		 * \brief returns this device data ports
@@ -134,7 +136,7 @@ namespace psycris::bus {
 		void connect(address_range r, device& dp) { devices.push_back({r, &dp}); }
 
 		void connect(uint32_t start, device& dp) {
-			connect({start, gsl::narrow_cast<uint32_t>(start + dp.memory().size())}, dp);
+			connect({start, gsl::narrow_cast<uint32_t>(start + dp.memory_size())}, dp);
 		}
 
 	  public:
@@ -186,14 +188,14 @@ namespace psycris::bus {
 		template <typename T>
 		T read(device_map const& map, uint32_t addr) const {
 			T value;
-			auto device_memory = map.d->memory();
+			auto device_memory = map.d->readable_memory();
 			std::memcpy(&value, &device_memory[map.offset(addr)], sizeof(T));
 			return value;
 		}
 
 		uint32_t read(device_map const& map, data_port const& port) const {
 			uint32_t value;
-			auto device_memory = map.d->memory();
+			auto device_memory = map.d->readable_memory();
 			std::memcpy(&value, &device_memory[port.offset()], sizeof(value));
 			if (port.size() == 1) {
 				value &= 0x0000'00ff;
@@ -205,7 +207,7 @@ namespace psycris::bus {
 
 		template <typename T>
 		void write(device_map const& map, uint32_t addr, T value) {
-			auto device_memory = map.d->memory();
+			auto device_memory = map.d->writable_memory();
 			std::memcpy(&device_memory[map.offset(addr)], &value, sizeof(T));
 		}
 

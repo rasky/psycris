@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
 	if (cfg.mode == cfg.bios) {
 		log->info("loading bios {}", cfg.input_file);
-		psycris::load_bios(f, board.rom.memory());
+		psycris::load_bios(f, board.rom.writable_memory());
 	} else {
 		log->info("restoring from {}", cfg.input_file);
 		psycris::restore_board(f, board);

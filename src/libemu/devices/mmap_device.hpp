@@ -30,7 +30,18 @@ namespace psycris::hw {
 		};
 	}
 
-	template <typename Derived, size_t MemoryBytes>
+	enum class rw_buffers {
+		shared,
+		distinct,
+	};
+
+	enum class buffer {
+		any,
+		r,
+		w,
+	};
+
+	template <typename Derived, size_t MemoryBytes, rw_buffers RW = rw_buffers::shared>
 	class mmap_device : public bus::device {
 	  private:
 		/**
@@ -63,13 +74,26 @@ namespace psycris::hw {
 			Derived* _device;
 		};
 
+		static constexpr bool shared_buffers = RW == rw_buffers::shared;
+
 	  public:
-		static constexpr size_t size = MemoryBytes;
+		static constexpr size_t addressable_size = MemoryBytes;
+
+		static constexpr size_t size = addressable_size * (shared_buffers ? 1 : 2);
 
 		template <typename... DataPorts>
-		mmap_device(gsl::span<uint8_t, size> buffer, DataPorts...) : _memory{buffer} {
+		mmap_device(gsl::span<uint8_t, addressable_size> r, gsl::span<uint8_t, addressable_size> w, DataPorts...)
+		    : _read_memory{r}, _write_memory{w} {
 			if constexpr (sizeof...(DataPorts) > 0) {
 				initialize_ports<DataPorts...>();
+			}
+		}
+
+		template <typename... DataPorts>
+		mmap_device(gsl::span<uint8_t, addressable_size> buffer, DataPorts... ports)
+		    : mmap_device{buffer, buffer, ports...} {
+			if constexpr (!shared_buffers) {
+				static_assert(sizeof(Derived) < 1, "This device requires two distinct buffers for read/write memory");
 			}
 		}
 
@@ -88,21 +112,38 @@ namespace psycris::hw {
 			return "unknown device";
 		}
 
-		gsl::span<uint8_t> memory() const override { return _memory; }
+		gsl::span<uint8_t> readable_memory() const override { return _read_memory; }
+
+		gsl::span<uint8_t> writable_memory() const override { return _write_memory; }
+
+		size_t memory_size() const override {
+			assert(readable_memory().size() == writable_memory().size());
+			return readable_memory().size();
+		}
 
 		std::vector<bus::data_port const*> const& ports() override { return _ports_ptrs; }
 
 	  protected:
-		template <typename DataPort>
+		template <typename DataPort, buffer b = buffer::any>
 		auto read() const {
+			if constexpr (b == buffer::any && !shared_buffers) {
+				static_assert(sizeof(Derived) < 1, "You must specify the buffer from which to read");
+			}
+
+			auto ptr = b == buffer::w ? _write_memory.data() : _read_memory.data();
 			typename DataPort::int_type val;
-			std::memcpy(&val, _memory.data() + DataPort::offset, DataPort::size);
+			std::memcpy(&val, ptr + DataPort::offset, DataPort::size);
 			return val;
 		}
 
-		template <typename DataPort>
+		template <typename DataPort, buffer b = buffer::any>
 		void write(typename DataPort::int_type val) {
-			std::memcpy(_memory.data() + DataPort::offset, &val, DataPort::size);
+			if constexpr (b == buffer::any && !shared_buffers) {
+				static_assert(sizeof(Derived) < 1, "You must specify the buffer to write to");
+			}
+
+			auto ptr = b == buffer::w ? _write_memory.data() : _read_memory.data();
+			std::memcpy(ptr + DataPort::offset, &val, DataPort::size);
 		}
 
 	  private:
@@ -135,7 +176,8 @@ namespace psycris::hw {
 		/**
 		 * \brief the device memory (not owned by this class)
 		 */
-		gsl::span<uint8_t, MemoryBytes> _memory;
+		gsl::span<uint8_t, MemoryBytes> _read_memory;
+		gsl::span<uint8_t, MemoryBytes> _write_memory;
 
 		/**
 		 * \brief The device data ports (if any).
