@@ -197,9 +197,8 @@ namespace psycris::bus {
 			return value;
 		}
 
-		uint32_t read(device_map const& map, data_port const& port) const {
+		uint32_t read(gsl::span<uint8_t> device_memory, data_port const& port) const {
 			uint32_t value;
-			auto device_memory = map.d->readable_memory();
 			std::memcpy(&value, &device_memory[port.offset()], sizeof(value));
 			if (port.size() == 1) {
 				value &= 0x0000'00ff;
@@ -238,7 +237,7 @@ namespace psycris::bus {
 				uint8_t port_bytes = std::min(gsl::narrow_cast<int8_t>(next_port_offset - device_offset),
 				                              written_bytes);
 				{
-					uint32_t new_value = read(map, *port);
+					uint32_t new_value = read(map.d->writable_memory(), *port);
 					uint32_t old_value = new_value;
 
 					// `p` points to the overwritten portion of `old_value`
