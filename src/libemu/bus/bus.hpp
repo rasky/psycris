@@ -152,6 +152,10 @@ namespace psycris::bus {
 				return static_cast<T>(open_bus);
 			}
 
+			std::string n = device->d->name();
+			if (n != "RAM" && n != "ROM") {
+				psycris::log->info("reading from {} {:0>8x} ({})", n, addr, guess_io_port(addr));
+			}
 			return read<T>(*device, addr);
 		}
 
