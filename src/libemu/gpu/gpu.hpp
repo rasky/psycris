@@ -66,5 +66,10 @@ namespace psycris::gpu {
 
 		fixed_fifo<uint32_t, 16> gp0_commands;
 		fixed_fifo<uint32_t, 16> gp1_commands;
+
+	  private:
+		struct cxd_ins;
+
+		uint32_t draw_mode;
 	};
 }
