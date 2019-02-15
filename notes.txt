@@ -1,0 +1,10 @@
+19264662:
+    Interrupt: +VBLANK 
+19264682:
+    Timer1: Target ffff
+19264687:
+    Timer1: Repeat / Source VBLANK
+19264780:
+    Interrupt: +VBLANK +DMA
+19264876:
+    DMA: +DMA2 (GPU) - Reset DMA2
