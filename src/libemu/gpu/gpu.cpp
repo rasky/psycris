@@ -69,6 +69,7 @@ namespace psycris::gpu {
 	controller& cxd::ctrl_device() const { return *ctrl; }
 
 	uint64_t cxd::ticks() const { return clock; }
+
 	void cxd::run(uint64_t until) {
 		cxd_ins exec{*this};
 

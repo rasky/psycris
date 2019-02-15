@@ -9,6 +9,8 @@
 
 #include "../logging.hpp"
 
+#include "../debug.hpp"
+
 /**
  * \brief The `bus` namespace contains the type `data_bus` and the interfaces
  * needed to implement the devices to connect to.
@@ -155,11 +157,13 @@ namespace psycris::bus {
 				return static_cast<T>(open_bus);
 			}
 
+			auto v = read<T>(*device, addr);
 			std::string n = device->d->name();
 			if (n != "RAM" && n != "ROM" && n != "SPU") {
-				psycris::log->info("reading from {} {:0>8x} ({})", n, addr, guess_io_port(addr));
+				psycris::log->info(
+				    "[{}] read {:x} from {} - {} {:0>8x}", psycris::dbg::cpu_ticks(), v, n, guess_io_port(addr), addr);
 			}
-			return read<T>(*device, addr);
+			return v;
 		}
 
 		template <typename T>
@@ -182,8 +186,10 @@ namespace psycris::bus {
 
 			std::string n = device->d->name();
 			if (n != "RAM" && n != "ROM" && n != "SPU") {
-				psycris::log->info("writing {:x} to {} - {} {:0>8x}", val, n, guess_io_port(addr), addr);
+				psycris::log->info(
+				    "[{}] write {:x} to {} - {} {:0>8x}", psycris::dbg::cpu_ticks(), val, n, guess_io_port(addr), addr);
 			}
+
 			touch_data_ports<T>(*device, addr, prev_value);
 		}
 

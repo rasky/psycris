@@ -5,6 +5,8 @@
 #include "../libemu/psx.hpp"
 #include "../libemu/scheduler.hpp"
 
+#include "../libemu/debug.hpp"
+
 #include <cstdlib>
 #include <fstream>
 
@@ -33,6 +35,7 @@ int main(int argc, char* argv[]) {
 	psycris::init_logging(cfg.verbose);
 
 	psycris::psx board;
+	psycris::dbg::board = &board;
 
 	log->info("PSX board. Total memory={}", psycris::psx::board::memory_size());
 	if (cfg.dump_on_exit) {
