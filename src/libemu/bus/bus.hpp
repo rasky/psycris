@@ -173,7 +173,8 @@ namespace psycris::bus {
 
 			auto device = find_device(addr);
 			if (!device) {
-				psycris::log->warn("[BUS] unmapped write of {} bytes at {:0>8x} ({:0>8x}) ({})",
+				psycris::log->warn("[{}] unmapped write of {} bytes at {:0>8x} ({:0>8x}) ({})",
+				                   psycris::dbg::cpu_ticks(),
 				                   sizeof(T),
 				                   addr,
 				                   val,
