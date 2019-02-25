@@ -50,3 +50,28 @@ TEST_CASE("a bitmask makes it easier to work with a bitset", "[core]") {
 		}
 	}
 }
+
+TEST_CASE("a bitmask has some faster methods to work with the bits regardless their value", "[core]") {
+	uint32_t value = 0xffff'ffff;
+
+	SECTION("the \"test\" method checks if any bit is set") {
+		REQUIRE(flag1.test(value) == true);
+
+		flag1(value) = 1;
+		REQUIRE(flag1.test(value) == true);
+
+		flag1(value) = 0;
+		REQUIRE(flag1.test(value) == false);
+	}
+
+	SECTION("the \"set\" method sets all the bits to 1") {
+		value = 0;
+		flag1.set(value);
+		REQUIRE(value == 0x0000'0f00);
+	}
+
+	SECTION("the \"clear\" method sets all the bits to 0") {
+		flag1.clear(value);
+		REQUIRE(value == 0xffff'f0ff);
+	}
+}

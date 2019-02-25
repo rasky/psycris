@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <limits>
 #include <stdexcept>
 
 namespace psycris {
@@ -68,6 +69,18 @@ namespace psycris {
 			if (m != 0) {
 				throw std::runtime_error("non-contiguos masks are not supported");
 			}
+		}
+
+		constexpr bool test(ValueType v) const {
+			return v & mask;
+		}
+
+		constexpr void set(ValueType& v) const {
+			this->operator()(v) = std::numeric_limits<ValueType>::max();
+		}
+
+		constexpr void clear(ValueType& v) const {
+			this->operator()(v) = 0;
 		}
 
 		constexpr masked_value<ValueType> operator()(ValueType const& v) const {
