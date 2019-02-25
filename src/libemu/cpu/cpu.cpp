@@ -317,6 +317,8 @@ namespace psycris::cpu {
 
 	uint64_t mips::ticks() const { return clock; }
 
+	uint32_t mips::program_counter() const { return pc; }
+
 	template <typename T>
 	T mips::read(uint32_t addr) const {
 		constexpr uint8_t mask = bus_align<sizeof(T)>::mask;

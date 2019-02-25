@@ -8,5 +8,7 @@ namespace psycris {
 		extern psx* board;
 
 		uint64_t cpu_ticks();
+
+		uint32_t cpu_pc();
 	}
 }

@@ -161,7 +161,7 @@ namespace psycris::bus {
 			std::string n = device->d->name();
 			if (n != "RAM" && n != "ROM" && n != "SPU") {
 				psycris::log->info(
-				    "[{}] read {:x} from {} - {} {:0>8x}", psycris::dbg::cpu_ticks(), v, n, guess_io_port(addr), addr);
+				    "[{}:{:0>8x}] read {:x} from {} - {} {:0>8x}", psycris::dbg::cpu_ticks(), psycris::dbg::cpu_pc(), v, n, guess_io_port(addr), addr);
 			}
 			return v;
 		}

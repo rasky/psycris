@@ -31,6 +31,8 @@ namespace psycris::cpu {
 	  public:
 		uint64_t ticks() const;
 
+		uint32_t program_counter() const;
+
 	  private:
 		uint32_t& rs();
 		uint32_t& rt();
