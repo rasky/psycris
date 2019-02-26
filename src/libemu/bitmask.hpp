@@ -12,6 +12,11 @@ namespace psycris {
 		constexpr operator ValueType() const { return value; }
 
 		template <typename T>
+		T as() const {
+			return static_cast<T>(value);
+		}
+
+		template <typename T>
 		constexpr ValueType operator=(T) {
 			static_assert(sizeof(T) < 0, "this masked value is read-only");
 			return 0;
@@ -28,6 +33,11 @@ namespace psycris {
 
 	  public:
 		constexpr operator ValueType() const { return (value & mask) >> offset; }
+
+		template <typename T>
+		T as() const {
+			return static_cast<T>(value);
+		}
 
 		constexpr ValueType operator=(ValueType v) {
 			value = (value & ~mask) | ((v << offset) & mask);
@@ -71,17 +81,11 @@ namespace psycris {
 			}
 		}
 
-		constexpr bool test(ValueType v) const {
-			return v & mask;
-		}
+		constexpr bool test(ValueType v) const { return v & mask; }
 
-		constexpr void set(ValueType& v) const {
-			this->operator()(v) = std::numeric_limits<ValueType>::max();
-		}
+		constexpr void set(ValueType& v) const { this->operator()(v) = std::numeric_limits<ValueType>::max(); }
 
-		constexpr void clear(ValueType& v) const {
-			this->operator()(v) = 0;
-		}
+		constexpr void clear(ValueType& v) const { this->operator()(v) = 0; }
 
 		constexpr masked_value<ValueType> operator()(ValueType const& v) const {
 			return masked_value<ValueType>((v & mask) >> offset);
