@@ -47,8 +47,6 @@ namespace psycris::hw {
 		 * The source is a number in the range [0-3]; its meaning
 		 * depends on the subclass.
 		 */
-		// void source(uint8_t v);
-
 		uint8_t source() const;
 
 	  protected:
@@ -56,8 +54,14 @@ namespace psycris::hw {
 		 * \brief Returns the current timer value
 		 */
 		uint16_t value() const;
+		void value(uint16_t v);
+
+		void sync_status(sync_status_t v);
 
 		void increment(uint16_t v);
+
+		bool sync_bit() const;
+		void sync_bit(bool v);
 
 	  private:
 		using counter_value = data_reg<0, 4>;
@@ -84,6 +88,9 @@ namespace psycris::hw {
 		void input(source src, uint32_t v);
 
 		using base_timer::value;
+
+		void enter_hblank();
+		void exit_hblank();
 	};
 	/*
 	    class timer1 : public timer_impl<timer1> {
