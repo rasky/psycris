@@ -29,6 +29,8 @@ namespace {
 }
 
 namespace psycris::hw {
+	base_timer::base_timer(gsl::span<uint8_t, size> buffer, std::function<void()> f)
+	    : mmap_device{buffer, counter_mode{}}, make_interrupt{f} {}
 
 	base_timer::sync_status_t base_timer::sync_status() const {
 		uint32_t mode = read<counter_mode>();
@@ -86,6 +88,7 @@ namespace psycris::hw {
 	void base_timer::sync_bit(bool v) {
 		uint16_t mode = read<counter_mode>() & 0xffff;
 		timer_sync_bit(mode) = v;
+		write<counter_mode>(mode);
 	}
 
 	bool base_timer::sync_bit() const { return timer_sync_bit(read<counter_mode>()); }

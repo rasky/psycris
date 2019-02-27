@@ -3,13 +3,11 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-
 #include <gsl/span>
 #include <vector>
 
-#include "../logging.hpp"
-
 #include "../debug.hpp"
+#include "../logging.hpp"
 
 /**
  * \brief The `bus` namespace contains the type `data_bus` and the interfaces
@@ -160,8 +158,13 @@ namespace psycris::bus {
 			auto v = read<T>(*device, addr);
 			std::string n = device->d->name();
 			if (n != "RAM" && n != "ROM" && n != "SPU") {
-				psycris::log->info(
-				    "[{}:{:0>8x}] read {:x} from {} - {} {:0>8x}", psycris::dbg::cpu_ticks(), psycris::dbg::cpu_pc(), v, n, guess_io_port(addr), addr);
+				psycris::log->info("[{}:{:0>8x}] read {:x} from {} - {} {:0>8x}",
+				                   psycris::dbg::cpu_ticks(),
+				                   psycris::dbg::cpu_pc(),
+				                   v,
+				                   n,
+				                   guess_io_port(addr),
+				                   addr);
 			}
 			return v;
 		}

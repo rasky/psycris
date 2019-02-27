@@ -5,7 +5,7 @@
 namespace psycris::hw {
 	class base_timer : public mmap_device<base_timer, 12> {
 	  public:
-		base_timer(gsl::span<uint8_t, size> buffer, std::function<void()> f) : mmap_device{buffer}, make_interrupt{f} {}
+		base_timer(gsl::span<uint8_t, size> buffer, std::function<void()> f);
 
 		enum sync_status_t {
 			disabled = 0,
@@ -68,7 +68,9 @@ namespace psycris::hw {
 		using counter_mode = data_reg<4, 4>;
 		using counter_target = data_reg<8, 4>;
 
-		// 	void wcb(counter_mode, uint32_t, uint32_t) { this->template write<counter_value>(0); }
+		friend mmap_device;
+
+		void wcb(counter_mode, uint32_t, uint32_t) { write<counter_value>(0); }
 
 		std::function<void()> make_interrupt;
 	};
