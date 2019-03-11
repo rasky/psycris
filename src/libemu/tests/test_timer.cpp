@@ -23,14 +23,21 @@ namespace {
 			select_input(timer0::system_clock);
 			target(0);
 			reset_mode(end_reached);
+			irq_repeat(false);
+			irq_mode(pulse);
+			irq_on_target(false);
+			irq_on_end(false);
 		}
 
+		// the timer memory; value, mode and target data ports
 		std::array<uint32_t, 3> memory;
 
 		timer0 timer;
 
+		// How many times the interrupt was triggered
 		int interrupts;
 
+	  public:
 		using mask = psycris::bit_mask<class mask_>;
 
 		uint16_t value() const { return timer.value(); }
@@ -70,6 +77,31 @@ namespace {
 		void sync_reset_on_hblank() { change_sync_mode(1); }
 		void sync_reset_on_hblank_pause_outside() { change_sync_mode(2); }
 		void sync_pause_until_hblank() { change_sync_mode(3); }
+
+		void irq_repeat(bool v) {
+			uint32_t data = memory[1];
+			mask{0x0000'0040}(data) = v;
+			bus.write(4, data);
+		}
+
+		enum i_mode { pulse = 0, toggle = 1 };
+		void irq_mode(i_mode v) {
+			uint32_t data = memory[1];
+			mask{0x0000'0080}(data) = v;
+			bus.write(4, data);
+		}
+
+		void irq_on_target(bool v) {
+			uint32_t data = memory[1];
+			mask{0x0000'0010}(data) = v;
+			bus.write(4, data);
+		}
+
+		void irq_on_end(bool v) {
+			uint32_t data = memory[1];
+			mask{0x0000'0020}(data) = v;
+			bus.write(4, data);
+		}
 
 	  private:
 		void change_sync_mode(uint8_t v) {
@@ -141,6 +173,32 @@ TEST_CASE("Timers common interface", "[hw]") {
 				t0.input(timer0::system_clock, 10);
 
 				REQUIRE(t0.value() == 0);
+			}
+		}
+	}
+}
+
+TEST_CASE("Timers interrupts", "[hw]") {
+	test_timer t0;
+	t0.target(1);
+	t0.irq_on_target(true);
+
+	SECTION("a pulse timer triggers an interrupt when necessary") {
+		t0.irq_mode(test_timer::pulse);
+
+		SECTION("in one shot mode an interrupt is triggered when the target is reached") {
+			t0.input(timer0::system_clock);
+			REQUIRE(t0.interrupts == 1);
+
+			SECTION("but no more interrupts are requested until the timer is acknowledged") {
+				t0.input(timer0::system_clock);
+				REQUIRE(t0.interrupts == 1);
+
+				SECTION("to ack the timer a write on the mode data port is necessary") {
+					t0.irq_on_target(true);
+					t0.input(timer0::system_clock);
+					REQUIRE(t0.interrupts == 2);
+				}
 			}
 		}
 	}

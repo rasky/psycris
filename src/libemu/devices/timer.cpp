@@ -15,16 +15,20 @@ namespace {
 	static constexpr mask irq_on_end = mask{0x0000'0020};
 
 	// irq repeat: 0 = one shot; 1 = repeatedly
+	enum irq_repeat_mode { one_shot = 0, repeat = 1 };
 	static constexpr mask irq_repeat = mask{0x0000'0040};
 
 	// irq mode: 0 = pulse; 1 = toggle
+	enum irq_mode_mode { pulse = 0, toggle = 1 };
 	static constexpr mask irq_mode = mask{0x0000'0080};
+
 	static constexpr mask timer_source = mask{0x0000'0300};
 
 	static constexpr mask irq_requested = mask{0x0000'0400};
 	static constexpr mask target_reached = mask{0x0000'0800};
 	static constexpr mask end_reached = mask{0x0000'1000};
 
+	// the "sync bit" is stored on an unused bit
 	static constexpr mask timer_sync_bit = mask{0x0000'8000};
 }
 
@@ -76,11 +80,37 @@ namespace psycris::hw {
 
 		write<counter_value>(curr);
 
-		bool interrupt = (is_target_reached && irq_on_target.test(v)) || (is_end_reached && irq_on_end.test(v));
+		bool interrupt = (is_target_reached && irq_on_target.test(mode)) || (is_end_reached && irq_on_end.test(mode));
+		// irq_requested is 0 when an irq is already requested (it is reset to 1
+		// during a write).
+		//
+		// When in one_shot mode we must request an interrupt only once.
+		if (irq_repeat(mode) == one_shot && interrupt) {
+			if (irq_requested.test(mode)) {
+				// the one_shot/toggle config does not trigger any interrupt
+				if (irq_mode(mode) == pulse) {
+					make_interrupt();
+				}
+				irq_requested.clear(mode);
+			}
+		} else if (irq_repeat(mode) == repeat) {
+			if (irq_mode(mode) == pulse) {
+				if (interrupt) {
+					make_interrupt();
+				}
+				irq_requested(mode) = !interrupt;
+			} else {
+				if (interrupt) {
+					irq_requested(mode) = !irq_requested(mode);
+					if (irq_requested.test(mode)) {
+						make_interrupt();
+					}
+				}
+			}
+		}
 
 		target_reached(mode) = is_target_reached;
 		end_reached(mode) = is_end_reached;
-		irq_requested(mode) = interrupt;
 
 		write<counter_mode>(mode);
 	}
@@ -92,6 +122,13 @@ namespace psycris::hw {
 	}
 
 	bool base_timer::sync_bit() const { return timer_sync_bit(read<counter_mode>()); }
+
+	void base_timer::wcb(counter_mode, uint32_t new_value, uint32_t) {
+		uint16_t mode = new_value;
+		irq_requested.set(mode);
+		write<counter_mode>(mode);
+		write<counter_value>(0);
+	}
 
 	void timer0::input(source src, uint32_t v) {
 		uint8_t enabled_source = base_timer::source();

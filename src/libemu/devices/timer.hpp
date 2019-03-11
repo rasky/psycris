@@ -54,13 +54,45 @@ namespace psycris::hw {
 		 * \brief Returns the current timer value
 		 */
 		uint16_t value() const;
+
+		/**
+		 * \brief Change the timer value
+		 *
+		 * A convenience method for the subclasses
+		 */
 		void value(uint16_t v);
 
+		/**
+		 * \brief Change the timer sync status
+		 *
+		 * A convenience method for the subclasses
+		 */
 		void sync_status(sync_status_t v);
 
+		/**
+		 * \brief Increment the timer
+		 *
+		 * This is the main timer method; value is incremented and an interrupt
+		 * requested (if necessary).
+		 *
+		 * A subclass must call this method after it check if the input source
+		 * is enabled.
+		 *
+		 * \param v is the value to add to the timer
+		 */
 		void increment(uint16_t v);
 
+		/**
+		 * \brief Returns the "sync bit"
+		 *
+		 * The sync bit is reserved to the subclass; it can be changed when
+		 * entering/exiting the sync zone.
+		 */
 		bool sync_bit() const;
+
+		/**
+		 * \brief Change the "sync bit"
+		 */
 		void sync_bit(bool v);
 
 	  private:
@@ -70,7 +102,7 @@ namespace psycris::hw {
 
 		friend mmap_device;
 
-		void wcb(counter_mode, uint32_t, uint32_t) { write<counter_value>(0); }
+		void wcb(counter_mode, uint32_t, uint32_t);
 
 		std::function<void()> make_interrupt;
 	};
