@@ -49,6 +49,14 @@ namespace psycris::hw {
 		 */
 		uint8_t source() const;
 
+		/**
+		 * \brief Returns the "sync bit"
+		 *
+		 * The sync bit is reserved to the subclass; it can be changed when
+		 * entering/exiting the sync zone.
+		 */
+		bool sync_bit() const;
+
 	  protected:
 		/**
 		 * \brief Returns the current timer value
@@ -83,14 +91,6 @@ namespace psycris::hw {
 		void increment(uint16_t v);
 
 		/**
-		 * \brief Returns the "sync bit"
-		 *
-		 * The sync bit is reserved to the subclass; it can be changed when
-		 * entering/exiting the sync zone.
-		 */
-		bool sync_bit() const;
-
-		/**
 		 * \brief Change the "sync bit"
 		 */
 		void sync_bit(bool v);
@@ -115,7 +115,7 @@ namespace psycris::hw {
 
 	  public:
 		enum source {
-			system_clock,
+			system_clock = 0,
 			dot_clock,
 		};
 
@@ -126,36 +126,41 @@ namespace psycris::hw {
 		void enter_hblank();
 		void exit_hblank();
 	};
-	/*
-	    class timer1 : public timer_impl<timer1> {
-	      public:
-	        static constexpr char const* device_name = "Timer 1 (SYS + HBLANK)";
 
-	      public:
-	        enum source { system_clock, hblank };
+	class timer1 : public base_timer {
+	  public:
+		static constexpr char const* device_name = "Timer 1 (SYS + HBlank)";
 
-	        void increment(source, uint32_t q);
+		using base_timer::base_timer;
 
-	        enum event {
-	            vblank_enter,
-	            vblank_exit,
-	        };
+	  public:
+		enum source {
+			system_clock = 0,
+			hblank,
+		};
 
-	        void sync(event);
-	    };
+		void input(source src, uint32_t v);
 
-	    class timer2 : public timer_impl<timer2> {
-	      public:
-	        static constexpr char const* device_name = "Timer 2 (SYS + SYS/8)";
+		using base_timer::value;
 
-	      public:
-	        enum source { system_clock };
+		void enter_vblank();
+		void exit_vblank();
+	};
 
-	        void increment(source, uint32_t q);
+	class timer2 : public base_timer {
+	  public:
+		static constexpr char const* device_name = "Timer 1 (SYS + SYS/8)";
 
-	        enum event {};
+		using base_timer::base_timer;
 
-	        void sync(event);
-	    };
-	    */
+	  public:
+		enum source {
+			system_clock = 0,
+			system_clock_8,
+		};
+
+		void input(source src, uint32_t v);
+
+		using base_timer::value;
+	};
 }

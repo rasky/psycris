@@ -130,38 +130,39 @@ namespace psycris::hw {
 		write<counter_value>(0);
 	}
 
-	void timer0::input(source src, uint32_t v) {
-		uint8_t enabled_source = base_timer::source();
+	namespace {
+		bool timer01_can_increment(uint8_t source, base_timer const& t) {
+			bool do_increment = ((t.source() & 0x1) == 0 && source == 0) || ((t.source() & 0x1) == 1 && source == 1);
 
-		bool do_increment = ((enabled_source & 0x1) == 0 && src == source::system_clock)
-		    || ((enabled_source & 0x1) == 1 && src == source::dot_clock);
-
-		if (!do_increment) {
-			return;
-		}
-
-		/* sync_mode
-		 * ---------
-		 * 0 - Pause during Hblank
-		 * 1 - Reset counter to 0 at Hblank
-		 * 2 - Reset counter to 0 and pause outside of Hblank
-		 * 3 - Pause until Hblank occurs once, then switch to free run
-		 */
-		if (sync_status() == enabled) {
-			uint8_t mode = sync_mode();
-			bool hblank = sync_bit();
-			if (mode == 3) {
-				do_increment = false;
-			} else if ((mode == 0 && hblank) || (mode == 2 && !hblank)) {
-				do_increment = false;
+			if (!do_increment) {
+				return false;
 			}
-		}
 
-		if (!do_increment) {
-			return;
-		}
+			/* sync_mode
+			 * ---------
+			 * 0 - Pause during Hblank/VBlank
+			 * 1 - Reset counter to 0 at Hblank/VBlank
+			 * 2 - Reset counter to 0 and pause outside of Hblank/VBlank
+			 * 3 - Pause until Hblank/VBlank occurs once, then switch to free run
+			 */
+			if (t.sync_status() == base_timer::enabled) {
+				uint8_t mode = t.sync_mode();
+				bool blank = t.sync_bit();
+				if (mode == 3) {
+					do_increment = false;
+				} else if ((mode == 0 && blank) || (mode == 2 && !blank)) {
+					do_increment = false;
+				}
+			}
 
-		increment(v);
+			return do_increment;
+		}
+	}
+
+	void timer0::input(source src, uint32_t v) {
+		if (timer01_can_increment(src, *this)) {
+			increment(v);
+		}
 	}
 
 	void timer0::enter_hblank() {
@@ -177,4 +178,24 @@ namespace psycris::hw {
 	}
 
 	void timer0::exit_hblank() { sync_bit(false); }
+
+	void timer1::input(source src, uint32_t v) {
+		if (timer01_can_increment(src, *this)) {
+			increment(v);
+		}
+	}
+
+	void timer1::enter_vblank() {
+		sync_bit(true);
+		if (sync_status() == enabled) {
+			uint8_t mode = sync_mode();
+			if (mode == 1 || mode == 2) {
+				value(0);
+			} else if (mode == 3) {
+				sync_status(base_timer::disabled);
+			}
+		}
+	}
+
+	void timer1::exit_vblank() { sync_bit(false); }
 }
