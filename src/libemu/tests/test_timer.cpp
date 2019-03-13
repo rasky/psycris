@@ -180,26 +180,66 @@ TEST_CASE("Timers common interface", "[hw]") {
 
 TEST_CASE("Timers interrupts", "[hw]") {
 	test_timer t0;
-	t0.target(1);
+	t0.target(2);
 	t0.irq_on_target(true);
 
 	SECTION("a pulse timer triggers an interrupt when necessary") {
 		t0.irq_mode(test_timer::pulse);
 
 		SECTION("in one shot mode an interrupt is triggered when the target is reached") {
-			t0.input(timer0::system_clock);
+			t0.irq_repeat(false);
+			t0.input(timer0::system_clock, 2);
 			REQUIRE(t0.interrupts == 1);
 
 			SECTION("but no more interrupts are requested until the timer is acknowledged") {
-				t0.input(timer0::system_clock);
+				t0.input(timer0::system_clock, 2);
 				REQUIRE(t0.interrupts == 1);
 
 				SECTION("to ack the timer a write on the mode data port is necessary") {
 					t0.irq_on_target(true);
-					t0.input(timer0::system_clock);
+					t0.input(timer0::system_clock, 2);
 					REQUIRE(t0.interrupts == 2);
 				}
 			}
+		}
+
+		SECTION("in repeat mode an interrupt is triggered every time the target is reached (no ack required)") {
+			t0.irq_repeat(true);
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 1);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 2);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 3);
+		}
+	}
+
+	SECTION("A toggle timer invert the interrupt line when necessary") {
+		t0.irq_mode(test_timer::toggle);
+
+		SECTION("in repeat mode the interrupt is triggered every two targets (starting from the second repeat)") {
+			t0.irq_repeat(true);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 0);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 1);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 1);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 2);
+		}
+
+		SECTION("but in one shot mode an interrupt si never triggered") {
+			t0.irq_repeat(false);
+
+			t0.input(timer0::system_clock, 2);
+			REQUIRE(t0.interrupts == 0);
 		}
 	}
 }
